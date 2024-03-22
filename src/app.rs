@@ -1,20 +1,20 @@
-use std::default;
 
-use eframe::App;
-use egui::debug_text::print;
+
+
+
 use egui::Visuals;
 
 use crate::adapter::*;
-use crate::drill::Drill;
+
 use crate::holder::*;
 use crate::library::*;
 use crate::machine::*;
 use crate::magazine::*;
-use crate::mill::Mill;
+
 use crate::tool::*;
 
 use crate::resources::*;
-use crate::trigoninsert::TrigonInsert;
+
 
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)]

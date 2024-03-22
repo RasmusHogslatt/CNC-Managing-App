@@ -1,7 +1,6 @@
-use crate::magazine;
 use crate::magazine::*;
 use crate::reset_states;
-use crate::resources::*;
+
 use crate::ManagingApp;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
