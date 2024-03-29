@@ -29,11 +29,27 @@ impl Tool {
         }
     }
 
-    pub fn display(&mut self, ui: &mut egui::Ui) {
+    pub fn display(&self, ui: &mut egui::Ui) {
         match self {
             Tool::Drill(drill) => drill.display(ui),
             Tool::Mill(mill) => mill.display(ui),
             Tool::TrigonInsert(trigon_insert) => trigon_insert.display(ui),
+        }
+    }
+
+    pub fn get_category(&self) -> ToolCategory {
+        match self {
+            Tool::Drill(_) => ToolCategory::Rotating,
+            Tool::Mill(_) => ToolCategory::Rotating,
+            Tool::TrigonInsert(_) => ToolCategory::LatheInsert,
+        }
+    }
+
+    pub fn get_diameter(&self) -> f32 {
+        match self {
+            Tool::Drill(drill) => drill.diameter,
+            Tool::Mill(mill) => mill.diameter,
+            Tool::TrigonInsert(_) => 0.0,
         }
     }
 }
@@ -45,16 +61,16 @@ pub fn add_tool(app: &mut ManagingApp, ctx: &egui::Context) {
         .show(ctx, |ui| {
             ui.horizontal(|ui| {
                 if ui.button("Rotating").clicked() {
-                    app.app_states.add_tool_state = Some(AddToolState::Rotating);
+                    app.app_states.add_tool_state = Some(ToolState::Rotating);
                 }
                 if ui.button("Insert").clicked() {
-                    app.app_states.add_tool_state = Some(AddToolState::Insert);
+                    app.app_states.add_tool_state = Some(ToolState::Insert);
                 }
             });
             let mut should_add_tool = false;
             match app.app_states.add_tool_state {
-                Some(AddToolState::Rotating) => add_rotating_tool(app, ui, &mut should_add_tool),
-                Some(AddToolState::Insert) => {
+                Some(ToolState::Rotating) => add_rotating_tool(app, ui, &mut should_add_tool),
+                Some(ToolState::Insert) => {
                     add_insert_tool(app, ui, &mut should_add_tool);
                 }
                 None => {}

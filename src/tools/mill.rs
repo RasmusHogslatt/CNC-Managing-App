@@ -1,3 +1,5 @@
+use crate::tool::ToolCategory;
+
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq)]
 pub struct Mill {
     pub name: String,
@@ -25,7 +27,7 @@ impl Mill {
         *add = ui.button("Add").clicked()
     }
 
-    pub fn display(&mut self, ui: &mut egui::Ui) {
+    pub fn display(&self, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
             ui.horizontal(|ui| {
                 ui.label("Name:");
@@ -37,5 +39,13 @@ impl Mill {
                 ui.label(&self.diameter.to_string());
             });
         });
+    }
+
+    pub fn get_category(&self) -> ToolCategory {
+        ToolCategory::Rotating
+    }
+
+    pub fn get_diameter(&self) -> f32 {
+        self.diameter
     }
 }

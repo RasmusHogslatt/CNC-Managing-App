@@ -1,3 +1,5 @@
+use crate::tool::ToolCategory;
+
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq)]
 pub struct TrigonInsert {
     pub name: String,
@@ -24,7 +26,7 @@ impl TrigonInsert {
         *add = ui.button("Add").clicked()
     }
 
-    pub fn display(&mut self, ui: &mut egui::Ui) {
+    pub fn display(&self, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
             ui.horizontal(|ui| {
                 ui.label("Name:");
@@ -36,5 +38,9 @@ impl TrigonInsert {
                 ui.label(&self.degree.to_string());
             });
         });
+    }
+
+    pub fn get_category(&self) -> ToolCategory {
+        ToolCategory::LatheInsert
     }
 }

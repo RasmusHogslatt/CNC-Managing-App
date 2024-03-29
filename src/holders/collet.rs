@@ -22,7 +22,7 @@ impl Collet {
         *add = ui.button("Add").clicked()
     }
 
-    pub fn display(&mut self, ui: &mut egui::Ui) {
+    pub fn display(&self, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
             ui.horizontal(|ui| {
                 ui.label("Name:");

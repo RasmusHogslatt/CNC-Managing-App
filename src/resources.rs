@@ -1,3 +1,6 @@
+use std::fmt;
+use std::fmt::Display;
+
 use crate::{
     adapter::Adapter, collet::Collet, drill::Drill, holder::Holder, hydraulic::Hydraulic,
     mill::Mill, tool::Tool, trigoninsert::TrigonInsert, Machine,
@@ -16,9 +19,9 @@ pub struct Selections {
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Default)]
 pub struct ActiveState {
     pub app_state: AppState,
-    pub add_tool_state: Option<AddToolState>,
-    pub add_holder_state: Option<AddHolderState>,
-    pub add_adapter_state: Option<AddAdapterState>,
+    pub add_tool_state: Option<ToolState>,
+    pub add_holder_state: Option<HolderState>,
+    pub add_adapter_state: Option<AdapterState>,
     pub magazine_content_state: Option<MagazineContentType>,
 }
 
@@ -33,21 +36,30 @@ pub enum AppState {
     ShowLibrary,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Default)]
-pub enum AddToolState {
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Default, PartialEq, Eq)]
+pub enum ToolState {
     #[default]
     Rotating,
     Insert,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Default)]
-pub enum AddHolderState {
+impl fmt::Display for ToolState {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ToolState::Rotating => write!(f, "Rotating"),
+            ToolState::Insert => write!(f, "Insert"),
+        }
+    }
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Default, PartialEq, Eq)]
+pub enum HolderState {
     #[default]
     Standard,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Default)]
-pub enum AddAdapterState {
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Default, PartialEq, Eq)]
+pub enum AdapterState {
     #[default]
     Standard,
 }
@@ -60,6 +72,24 @@ pub enum MagazineContentType {
     Adapter,
 }
 
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Default, PartialEq, Eq)]
+pub enum SortBy {
+    #[default]
+    Slot,
+    Diameter,
+    Degree,
+}
+
+impl fmt::Display for SortBy {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            SortBy::Slot => write!(f, "Slot"),
+            SortBy::Diameter => write!(f, "Diameter"),
+            SortBy::Degree => write!(f, "Degree"),
+        }
+    }
+}
+
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct GuiSingletons {
     pub rotating_tools: Vec<Tool>,
@@ -67,6 +97,9 @@ pub struct GuiSingletons {
     pub holders: Vec<Holder>,
     pub adapters: Vec<Adapter>,
     pub machine: Machine,
+
+    pub tool_filter: Option<ToolState>,
+    pub sort_by: SortBy,
 }
 
 impl Default for GuiSingletons {
@@ -110,6 +143,8 @@ impl Default for GuiSingletons {
             holders,
             adapters,
             machine,
+            tool_filter: None,
+            sort_by: SortBy::Slot,
         }
     }
 }

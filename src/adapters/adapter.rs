@@ -21,7 +21,7 @@ impl Adapter {
         }
     }
 
-    pub fn display(&mut self, ui: &mut egui::Ui) {
+    pub fn display(&self, ui: &mut egui::Ui) {
         match self {
             Adapter::Hydraulic(hydraulic) => hydraulic.display(ui),
         }
@@ -35,12 +35,12 @@ pub fn add_adapter(app: &mut ManagingApp, ctx: &egui::Context) {
         .show(ctx, |ui| {
             ui.horizontal(|ui| {
                 if ui.button("Hydraulic").clicked() {
-                    app.app_states.add_adapter_state = Some(AddAdapterState::Standard);
+                    app.app_states.add_adapter_state = Some(AdapterState::Standard);
                 }
             });
             let mut should_add_adapter = false;
             match app.app_states.add_adapter_state {
-                Some(AddAdapterState::Standard) => {
+                Some(AdapterState::Standard) => {
                     add_standard_adapter(app, ui, &mut should_add_adapter);
                 }
                 None => {

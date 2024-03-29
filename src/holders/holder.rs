@@ -25,7 +25,7 @@ impl Holder {
         }
     }
 
-    pub fn display(&mut self, ui: &mut egui::Ui) {
+    pub fn display(&self, ui: &mut egui::Ui) {
         match self {
             Holder::Collet(collet) => collet.display(ui),
         }
@@ -43,12 +43,12 @@ pub fn add_holder(app: &mut ManagingApp, ctx: &egui::Context) {
         .show(ctx, |ui| {
             ui.horizontal(|ui| {
                 if ui.button("Standard").clicked() {
-                    app.app_states.add_holder_state = Some(AddHolderState::Standard);
+                    app.app_states.add_holder_state = Some(HolderState::Standard);
                 }
             });
             let mut should_add_holder = false;
             match app.app_states.add_holder_state {
-                Some(AddHolderState::Standard) => {
+                Some(HolderState::Standard) => {
                     add_standard_holder(app, ui, &mut should_add_holder);
                 }
                 None => {

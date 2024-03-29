@@ -1,7 +1,3 @@
-
-
-
-
 use egui::Visuals;
 
 use crate::adapter::*;
@@ -15,7 +11,6 @@ use crate::tool::*;
 
 use crate::resources::*;
 
-
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct ManagingApp {
@@ -25,6 +20,7 @@ pub struct ManagingApp {
     pub library: Library,
     #[serde(skip)]
     pub gui_singletons: GuiSingletons,
+    pub display_magazine: Magazine, // TODO: Clone sorted/filtered content here
 }
 
 impl Default for ManagingApp {
@@ -36,6 +32,10 @@ impl Default for ManagingApp {
             app_states: ActiveState::default(),
             gui_singletons: GuiSingletons::default(),
             library: Library::default(),
+            display_magazine: Magazine {
+                name: "None selected".to_string(),
+                contents: Vec::new(),
+            },
         }
     }
 }
@@ -136,21 +136,23 @@ impl eframe::App for ManagingApp {
             });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            // The central panel the region left after adding TopPanel's and SidePanel's
-            ui.heading("Here goes magazine content!");
-        });
-        match self.app_states.app_state {
-            AppState::ShowMagazine => {}
-            AppState::AddTool => add_tool(self, ctx),
-            AppState::AddHolder => add_holder(self, ctx),
-            AppState::AddAdapter => add_adapter(self, ctx),
-            AppState::AddMachine => add_machine(self, ctx),
-            AppState::ShowLibrary => {
-                if !self.library.display(ctx) {
-                    reset_states(self);
+            filter_by_tool_category(self, ui);
+            sort_by(self, ui);
+            match self.app_states.app_state {
+                AppState::ShowMagazine => {
+                    display_magazine(&self.display_magazine, ui); // TODO: Change to clone stuff
+                }
+                AppState::AddTool => add_tool(self, ctx),
+                AppState::AddHolder => add_holder(self, ctx),
+                AppState::AddAdapter => add_adapter(self, ctx),
+                AppState::AddMachine => add_machine(self, ctx),
+                AppState::ShowLibrary => {
+                    if !self.library.display(ctx) {
+                        reset_states(self);
+                    }
                 }
             }
-        }
+        });
     }
 }
 
@@ -162,4 +164,87 @@ pub fn reset_states(app: &mut ManagingApp) {
     app.app_states.magazine_content_state = None;
     app.selections.selected_rotating_tool_index = 0;
     app.selections.selected_insert_tool_index = 0;
+}
+
+pub fn filter_by_tool_category(app: &mut ManagingApp, ui: &mut egui::Ui) {
+    ui.horizontal(|ui| {
+        let mut name = "".to_string();
+        if let Some(tool_filter) = &app.gui_singletons.tool_filter {
+            name = tool_filter.to_string();
+        } else {
+            name = "All".to_string();
+        }
+        egui::ComboBox::from_label("Select tool category")
+            .selected_text(name)
+            .show_ui(ui, |ui| {
+                if ui
+                    .selectable_label(app.gui_singletons.tool_filter.is_none(), "All".to_string())
+                    .clicked()
+                {
+                    app.gui_singletons.tool_filter = None;
+                    // Apply filter and sort
+                }
+                if ui
+                    .selectable_label(
+                        app.gui_singletons.tool_filter == Some(ToolState::Rotating),
+                        "Rotating".to_string(),
+                    )
+                    .clicked()
+                {
+                    app.gui_singletons.tool_filter = Some(ToolState::Rotating);
+                    // Apply filter and sort
+                }
+                if ui
+                    .selectable_label(
+                        app.gui_singletons.tool_filter == Some(ToolState::Insert),
+                        "Insert".to_string(),
+                    )
+                    .clicked()
+                {
+                    app.gui_singletons.tool_filter = Some(ToolState::Insert);
+                    // Apply filter and sort
+                }
+            });
+    });
+}
+
+pub fn sort_by(app: &mut ManagingApp, ui: &mut egui::Ui) {
+    ui.horizontal(|ui| {
+        let mut name = "".to_string();
+        name = app.gui_singletons.sort_by.to_string();
+        egui::ComboBox::from_label("Sort by")
+            .selected_text(name)
+            .show_ui(ui, |ui| {
+                if ui
+                    .selectable_label(
+                        app.gui_singletons.sort_by == SortBy::Slot,
+                        SortBy::Slot.to_string(),
+                    )
+                    .clicked()
+                {
+                    app.gui_singletons.sort_by = SortBy::Slot;
+                    // Apply filter and sort
+                }
+                if ui
+                    .selectable_label(
+                        app.gui_singletons.sort_by == SortBy::Diameter,
+                        SortBy::Diameter.to_string(),
+                    )
+                    .clicked()
+                {
+                    app.gui_singletons.sort_by = SortBy::Diameter;
+                    // Apply filter and sort
+                }
+                if ui
+                    .selectable_label(
+                        app.gui_singletons.sort_by == SortBy::Degree,
+                        SortBy::Degree.to_string(),
+                    )
+                    .clicked()
+                {
+                    app.gui_singletons.sort_by = SortBy::Degree;
+                    // Apply filter and sort
+                }
+            });
+    });
 }
