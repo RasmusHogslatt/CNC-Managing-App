@@ -20,7 +20,8 @@ pub struct ManagingApp {
     pub library: Library,
     #[serde(skip)]
     pub gui_singletons: GuiSingletons,
-    pub display_magazine: Magazine, // TODO: Clone sorted/filtered content here
+    pub display_magazine: Magazine,
+    pub move_selections: MagazineLibraryMovingSelections,
 }
 
 impl Default for ManagingApp {
@@ -36,6 +37,7 @@ impl Default for ManagingApp {
                 name: "None selected".to_string(),
                 contents: Vec::new(),
             },
+            move_selections: MagazineLibraryMovingSelections::default(),
         }
     }
 }
@@ -140,7 +142,7 @@ impl eframe::App for ManagingApp {
             sort_by(self, ui);
             match self.app_states.app_state {
                 AppState::ShowMagazine => {
-                    display_magazine(&self.display_magazine, ui); // TODO: Change to clone stuff
+                    display_magazine(self, ui, ctx); // TODO: Change to clone stuff
                 }
                 AppState::AddTool => add_tool(self, ctx),
                 AppState::AddHolder => add_holder(self, ctx),
@@ -153,6 +155,31 @@ impl eframe::App for ManagingApp {
                 }
             }
         });
+
+        match &self.app_states.move_state {
+            Some(state) => match state {
+                MoveStates::ToolToMagazine => {
+                    select_tool_from_library(self, ctx);
+                    move_tool_to_magazine(self);
+                }
+                MoveStates::ToolToLibrary => {
+                    // move_tool_to_library(self);
+                }
+                MoveStates::HolderToMagazine => {
+                    // move_holder_to_magazine(self);
+                }
+                MoveStates::HolderToLibrary => {
+                    // move_holder_to_library(self);
+                }
+                MoveStates::AdapterToMagazine => {
+                    // move_adapter_to_magazine(self);
+                }
+                MoveStates::AdapterToLibrary => {
+                    // move_adapterk_to_library(self);
+                }
+            },
+            None => {}
+        }
     }
 }
 
@@ -164,17 +191,33 @@ pub fn reset_states(app: &mut ManagingApp) {
     app.app_states.magazine_content_state = None;
     app.selections.selected_rotating_tool_index = 0;
     app.selections.selected_insert_tool_index = 0;
+    app.app_states.move_state = None;
+    app.move_selections.selected_tool_index_magazine = None;
+    app.move_selections.selected_holder_index_magazine = None;
+    app.move_selections.selected_adapter_index_magazine = None;
+    app.move_selections.selected_tool_index_library = None;
+    app.move_selections.selected_holder_index_library = None;
+    app.move_selections.selected_adapter_index_library = None;
 }
 
 pub fn filter_by_tool_category(app: &mut ManagingApp, ui: &mut egui::Ui) {
     ui.horizontal(|ui| {
-        let mut name = "".to_string();
+        let name;
         if let Some(tool_filter) = &app.gui_singletons.tool_filter {
             name = tool_filter.to_string();
         } else {
             name = "All".to_string();
         }
-        egui::ComboBox::from_label("Select tool category")
+
+        if app.machines.is_empty() || app.selections.machine.is_none() {
+            return;
+        }
+        let mut machine = &mut app.machines[app.selections.machine.unwrap()];
+        if machine.current_magazine.is_none() {
+            return;
+        }
+        let mut magazine = &mut machine.magazines[machine.current_magazine.unwrap()];
+        egui::ComboBox::from_label("Filter tool category")
             .selected_text(name)
             .show_ui(ui, |ui| {
                 if ui
@@ -183,6 +226,7 @@ pub fn filter_by_tool_category(app: &mut ManagingApp, ui: &mut egui::Ui) {
                 {
                     app.gui_singletons.tool_filter = None;
                     // Apply filter and sort
+                    app.display_magazine.contents = magazine.contents.clone(); //get_sorted_by_tool_diameter(&mut magazine.contents);
                 }
                 if ui
                     .selectable_label(
@@ -193,6 +237,10 @@ pub fn filter_by_tool_category(app: &mut ManagingApp, ui: &mut egui::Ui) {
                 {
                     app.gui_singletons.tool_filter = Some(ToolState::Rotating);
                     // Apply filter and sort
+                    app.display_magazine.contents = get_filtered_by_tool_category(
+                        &mut magazine.contents,
+                        ToolCategory::Rotating,
+                    );
                 }
                 if ui
                     .selectable_label(
@@ -203,6 +251,10 @@ pub fn filter_by_tool_category(app: &mut ManagingApp, ui: &mut egui::Ui) {
                 {
                     app.gui_singletons.tool_filter = Some(ToolState::Insert);
                     // Apply filter and sort
+                    app.display_magazine.contents = get_filtered_by_tool_category(
+                        &mut magazine.contents,
+                        ToolCategory::LatheInsert,
+                    );
                 }
             });
     });
@@ -210,8 +262,18 @@ pub fn filter_by_tool_category(app: &mut ManagingApp, ui: &mut egui::Ui) {
 
 pub fn sort_by(app: &mut ManagingApp, ui: &mut egui::Ui) {
     ui.horizontal(|ui| {
-        let mut name = "".to_string();
+        let name;
         name = app.gui_singletons.sort_by.to_string();
+
+        if app.machines.is_empty() || app.selections.machine.is_none() {
+            return;
+        }
+        let mut machine = &mut app.machines[app.selections.machine.unwrap()];
+        if machine.current_magazine.is_none() {
+            return;
+        }
+        let mut magazine = &mut machine.magazines[machine.current_magazine.unwrap()];
+
         egui::ComboBox::from_label("Sort by")
             .selected_text(name)
             .show_ui(ui, |ui| {
@@ -224,6 +286,7 @@ pub fn sort_by(app: &mut ManagingApp, ui: &mut egui::Ui) {
                 {
                     app.gui_singletons.sort_by = SortBy::Slot;
                     // Apply filter and sort
+                    app.display_magazine.contents = magazine.contents.clone();
                 }
                 if ui
                     .selectable_label(
@@ -234,6 +297,10 @@ pub fn sort_by(app: &mut ManagingApp, ui: &mut egui::Ui) {
                 {
                     app.gui_singletons.sort_by = SortBy::Diameter;
                     // Apply filter and sort
+                    //sort magazine, return clone and assign to display_magazine
+                    app.display_magazine.contents =
+                        get_sorted_by_tool_diameter(&mut magazine.contents);
+                    // app.display_magazine = magazine.clone();
                 }
                 if ui
                     .selectable_label(
@@ -244,7 +311,12 @@ pub fn sort_by(app: &mut ManagingApp, ui: &mut egui::Ui) {
                 {
                     app.gui_singletons.sort_by = SortBy::Degree;
                     // Apply filter and sort
+                    app.display_magazine.contents = get_sorted_by_degree(&mut magazine.contents);
                 }
             });
     });
 }
+
+// Move from library to magazine should
+// 1. Clone the tool/holder/adapter and remove from library
+// 2. Add the cloned tool/holder/adapter to the magazine at selected slot

@@ -1,5 +1,4 @@
 use std::fmt;
-use std::fmt::Display;
 
 use crate::{
     adapter::Adapter, collet::Collet, drill::Drill, holder::Holder, hydraulic::Hydraulic,
@@ -17,8 +16,20 @@ pub struct Selections {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Default)]
+pub struct MagazineLibraryMovingSelections {
+    pub selected_tool_index_magazine: Option<usize>,
+    pub selected_holder_index_magazine: Option<usize>,
+    pub selected_adapter_index_magazine: Option<usize>,
+
+    pub selected_tool_index_library: Option<usize>,
+    pub selected_holder_index_library: Option<usize>,
+    pub selected_adapter_index_library: Option<usize>,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Default)]
 pub struct ActiveState {
     pub app_state: AppState,
+    pub move_state: Option<MoveStates>,
     pub add_tool_state: Option<ToolState>,
     pub add_holder_state: Option<HolderState>,
     pub add_adapter_state: Option<AdapterState>,
@@ -36,6 +47,17 @@ pub enum AppState {
     ShowLibrary,
 }
 
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Default)]
+pub enum MoveStates {
+    #[default]
+    ToolToMagazine,
+    ToolToLibrary,
+    HolderToMagazine,
+    HolderToLibrary,
+    AdapterToMagazine,
+    AdapterToLibrary,
+}
+
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Default, PartialEq, Eq)]
 pub enum ToolState {
     #[default]
@@ -44,7 +66,7 @@ pub enum ToolState {
 }
 
 impl fmt::Display for ToolState {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ToolState::Rotating => write!(f, "Rotating"),
             ToolState::Insert => write!(f, "Insert"),
@@ -81,7 +103,7 @@ pub enum SortBy {
 }
 
 impl fmt::Display for SortBy {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             SortBy::Slot => write!(f, "Slot"),
             SortBy::Diameter => write!(f, "Diameter"),

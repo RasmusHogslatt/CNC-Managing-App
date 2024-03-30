@@ -52,6 +52,14 @@ impl Tool {
             Tool::TrigonInsert(_) => 0.0,
         }
     }
+
+    pub fn get_degree(&self) -> f32 {
+        match self {
+            Tool::Drill(_) => 0.0,
+            Tool::Mill(_) => 0.0,
+            Tool::TrigonInsert(trigon_insert) => trigon_insert.degree,
+        }
+    }
 }
 
 pub fn add_tool(app: &mut ManagingApp, ctx: &egui::Context) {

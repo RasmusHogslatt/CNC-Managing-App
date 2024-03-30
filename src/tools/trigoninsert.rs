@@ -43,4 +43,8 @@ impl TrigonInsert {
     pub fn get_category(&self) -> ToolCategory {
         ToolCategory::LatheInsert
     }
+
+    pub fn get_degree(&self) -> f32 {
+        self.degree
+    }
 }
