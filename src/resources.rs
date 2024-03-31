@@ -154,8 +154,8 @@ impl Default for GuiSingletons {
         let adapters = vec![Adapter::Hydraulic(hydraulic)];
         let machine = Machine {
             name: "Machine".to_string(),
-            number_of_magazines: 0,
-            magazine_size: 0,
+            number_of_magazines: 1,
+            magazine_size: 1,
             magazines: vec![],
             current_magazine: None,
         };
