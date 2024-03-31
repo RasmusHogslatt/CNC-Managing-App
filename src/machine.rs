@@ -76,7 +76,7 @@ pub fn add_machine(app: &mut ManagingApp, ctx: &egui::Context) {
                         contents: Vec::new(),
                     };
                     for i in 0..app.gui_singletons.machine.magazine_size {
-                        current_magazine.contents.push((i as u32, None, None, None));
+                        current_magazine.contents.push((i, None, None, None));
                     }
                     current_magazine.name = format!("Magazine {}", magazines.len());
                     magazines.push(current_magazine);

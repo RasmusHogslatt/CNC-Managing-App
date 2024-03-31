@@ -6,11 +6,12 @@ use crate::holder::*;
 use crate::tool::*;
 use crate::ManagingApp;
 use crate::MoveStates;
+use crate::ToolState;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct Magazine {
     pub name: String,
-    pub contents: Vec<(u32, Option<Tool>, Option<Holder>, Option<Adapter>)>,
+    pub contents: Vec<(usize, Option<Tool>, Option<Holder>, Option<Adapter>)>,
 }
 
 pub fn select_magazine(app: &mut ManagingApp, ui: &mut egui::Ui) {
@@ -37,10 +38,33 @@ pub fn select_magazine(app: &mut ManagingApp, ui: &mut egui::Ui) {
         });
 }
 
+pub fn get_sorted_by_slot(
+    contents: &mut Vec<(usize, Option<Tool>, Option<Holder>, Option<Adapter>)>,
+    filter: Option<ToolState>,
+) -> Vec<(usize, Option<Tool>, Option<Holder>, Option<Adapter>)> {
+    let mut filtered = match filter {
+        Some(ToolState::Rotating) => {
+            get_filtered_by_tool_category(contents, ToolCategory::Rotating)
+        }
+        Some(ToolState::Insert) => {
+            get_filtered_by_tool_category(contents, ToolCategory::LatheInsert)
+        }
+        _ => contents.clone(),
+    };
+
+    let mut sorted: Vec<(usize, Option<Tool>, Option<Holder>, Option<Adapter>)> = filtered
+        .iter_mut()
+        .map(|(i, tool, holder, adapter)| (*i, tool.clone(), holder.clone(), adapter.clone()))
+        .collect();
+
+    sorted.sort_by(|(i_a, ..), (i_b, ..)| i_a.partial_cmp(i_b).unwrap_or(Ordering::Equal));
+    sorted
+}
+
 pub fn get_sorted_by_tool_diameter(
-    contents: &mut Vec<(u32, Option<Tool>, Option<Holder>, Option<Adapter>)>,
-) -> Vec<(u32, Option<Tool>, Option<Holder>, Option<Adapter>)> {
-    let mut filtered: Vec<(u32, Option<Tool>, Option<Holder>, Option<Adapter>)> = contents
+    contents: &mut Vec<(usize, Option<Tool>, Option<Holder>, Option<Adapter>)>,
+) -> Vec<(usize, Option<Tool>, Option<Holder>, Option<Adapter>)> {
+    let mut filtered: Vec<(usize, Option<Tool>, Option<Holder>, Option<Adapter>)> = contents
         .iter_mut()
         .filter(|(_u32, tool, _holder, _adapter)| {
             tool.clone()
@@ -62,9 +86,9 @@ pub fn get_sorted_by_tool_diameter(
 }
 
 pub fn get_sorted_by_degree(
-    contents: &mut Vec<(u32, Option<Tool>, Option<Holder>, Option<Adapter>)>,
-) -> Vec<(u32, Option<Tool>, Option<Holder>, Option<Adapter>)> {
-    let mut filtered: Vec<(u32, Option<Tool>, Option<Holder>, Option<Adapter>)> = contents
+    contents: &mut Vec<(usize, Option<Tool>, Option<Holder>, Option<Adapter>)>,
+) -> Vec<(usize, Option<Tool>, Option<Holder>, Option<Adapter>)> {
+    let mut filtered: Vec<(usize, Option<Tool>, Option<Holder>, Option<Adapter>)> = contents
         .iter_mut()
         .filter(|(_u32, tool, _holder, _adapter)| {
             tool.clone()
@@ -86,12 +110,12 @@ pub fn get_sorted_by_degree(
 }
 
 pub fn get_filtered_by_tool_category(
-    contents: &mut Vec<(u32, Option<Tool>, Option<Holder>, Option<Adapter>)>,
+    contents: &mut Vec<(usize, Option<Tool>, Option<Holder>, Option<Adapter>)>,
     category: ToolCategory,
-) -> Vec<(u32, Option<Tool>, Option<Holder>, Option<Adapter>)> {
+) -> Vec<(usize, Option<Tool>, Option<Holder>, Option<Adapter>)> {
     contents
         .iter_mut()
-        .filter(|(_u32, tool, _holder, _adapter)| {
+        .filter(|(_usize, tool, _holder, _adapter)| {
             tool.clone()
                 .map(|t| t.get_category() == category)
                 .unwrap_or(false)
@@ -100,35 +124,34 @@ pub fn get_filtered_by_tool_category(
         .collect()
 }
 
-pub fn display_magazine(app: &mut ManagingApp, ui: &mut egui::Ui, ctx: &egui::Context) {
+pub fn display_magazine(app: &mut ManagingApp, ui: &mut egui::Ui, _ctx: &egui::Context) {
     ui.label(app.display_magazine.name.clone());
-    for (i, (index, tool, holder, adapter)) in app.display_magazine.contents.iter().enumerate() {
+    for (_i, (index, tool, holder, adapter)) in app.display_magazine.contents.iter().enumerate() {
         ui.horizontal(|ui| {
             ui.label(format!("Slot {}", index));
 
             ui.separator();
             if ui.button("Add").clicked() {
-                app.move_selections.selected_tool_index_magazine = Some(i);
+                app.move_selections.selected_tool_index_magazine = Some(*index);
                 app.app_states.move_state = Some(MoveStates::ToolToMagazine);
             }
             if ui.button("Remove").clicked() {
-                app.move_selections.selected_tool_index_magazine = Some(i);
+                app.move_selections.selected_tool_index_magazine = Some(*index);
                 app.app_states.move_state = Some(MoveStates::ToolToLibrary);
             }
             if let Some(tool) = tool {
                 tool.display(ui);
-                //button to add tool, selections.selected_rotating_tool_index = i
             } else {
                 ui.label("Empty");
             }
 
             ui.separator();
             if ui.button("Add").clicked() {
-                app.move_selections.selected_holder_index_magazine = Some(i);
+                app.move_selections.selected_holder_index_magazine = Some(*index);
                 app.app_states.move_state = Some(MoveStates::HolderToMagazine);
             }
             if ui.button("Remove").clicked() {
-                app.move_selections.selected_holder_index_magazine = Some(i);
+                app.move_selections.selected_holder_index_magazine = Some(*index);
                 app.app_states.move_state = Some(MoveStates::HolderToLibrary);
             }
             if let Some(holder) = holder {
@@ -139,11 +162,11 @@ pub fn display_magazine(app: &mut ManagingApp, ui: &mut egui::Ui, ctx: &egui::Co
 
             ui.separator();
             if ui.button("Add").clicked() {
-                app.move_selections.selected_adapter_index_magazine = Some(i);
+                app.move_selections.selected_adapter_index_magazine = Some(*index);
                 app.app_states.move_state = Some(MoveStates::AdapterToMagazine);
             }
             if ui.button("Remove").clicked() {
-                app.move_selections.selected_adapter_index_magazine = Some(i);
+                app.move_selections.selected_adapter_index_magazine = Some(*index);
                 app.app_states.move_state = Some(MoveStates::AdapterToLibrary);
             }
             if let Some(adapter) = adapter {

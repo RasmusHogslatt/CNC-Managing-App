@@ -1,9 +1,7 @@
 use crate::adapter::*;
-use crate::get_sorted_by_tool_diameter;
+
 use crate::holder::*;
 
-use crate::machine;
-use crate::magazine;
 use crate::reset_states;
 use crate::resources::*;
 use crate::tool::*;
@@ -62,12 +60,13 @@ impl Library {
 }
 
 pub fn move_tool_to_magazine(app: &mut ManagingApp) {
-    let mut library_index = app.move_selections.selected_tool_index_library;
-    let mut magazine_index = app.move_selections.selected_tool_index_magazine;
+    let library_index = app.move_selections.selected_tool_index_library;
+    let magazine_index = app.move_selections.selected_tool_index_magazine;
 
-    let mut machine = &mut app.machines[app.selections.machine.unwrap()];
-    let mut magazine = &mut machine.magazines[machine.current_magazine.unwrap()];
+    let machine = &mut app.machines[app.selections.machine.unwrap()];
+    let magazine = &mut machine.magazines[machine.current_magazine.unwrap()];
     // Return if any index is none, otherwise create a block scope to borrow the library and magazine
+
     if library_index.is_none() || magazine_index.is_none() {
         return;
     }
@@ -76,9 +75,47 @@ pub fn move_tool_to_magazine(app: &mut ManagingApp) {
         let library_index = library_index.unwrap();
         let magazine_index = magazine_index.unwrap();
         let library_tool = app.library.tools[library_index].clone();
+        let tool_in_magazine = magazine.contents[magazine_index].1.clone();
 
-        magazine.contents[magazine_index].1 = Some(library_tool);
-        app.library.tools.remove(library_index);
+        match tool_in_magazine {
+            Some(tool) => {
+                magazine.contents[magazine_index].1 = Some(library_tool);
+                app.library.tools.remove(library_index);
+                app.library.tools.push(tool);
+            }
+            None => {
+                magazine.contents[magazine_index].1 = Some(library_tool);
+                app.library.tools.remove(library_index);
+            }
+        }
+        app.display_magazine = magazine.clone();
+        reset_states(app);
+    }
+}
+
+pub fn move_tool_to_library(app: &mut ManagingApp) {
+    let magazine_index = app.move_selections.selected_tool_index_magazine;
+
+    let machine = &mut app.machines[app.selections.machine.unwrap()];
+    let magazine = &mut machine.magazines[machine.current_magazine.unwrap()];
+    // Return if any index is none, otherwise create a block scope to borrow the library and magazine
+    if magazine_index.is_none() {
+        return;
+    }
+
+    {
+        let magazine_index = magazine_index.unwrap();
+        let magazine_tool = magazine.contents[magazine_index].1.clone();
+
+        match magazine_tool {
+            Some(tool) => {
+                app.library.tools.push(tool);
+                magazine.contents[magazine_index].1 = None;
+            }
+            None => {
+                magazine.contents[magazine_index].1 = None;
+            }
+        }
         app.display_magazine = magazine.clone();
         reset_states(app);
     }
