@@ -90,7 +90,6 @@ pub fn add_machine(app: &mut ManagingApp, ctx: &egui::Context) {
                 };
                 app.machines.push(machine.clone());
 
-                println!("Machine added: {:?}", machine);
                 app.gui_singletons.machine = Machine {
                     name: "Machine".to_string(),
                     magazines: Vec::new(),
