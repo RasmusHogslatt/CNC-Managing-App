@@ -9,6 +9,7 @@ use crate::reset_states;
 use crate::resources::*;
 use crate::tool::*;
 use crate::ManagingApp;
+use egui_extras::*;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Default)]
 pub struct Library {
@@ -29,56 +30,56 @@ impl Library {
                     ui.radio_value(&mut self.category, MagazineContentType::Holder, "Holder");
                     ui.radio_value(&mut self.category, MagazineContentType::Adapter, "Adapter");
                 });
-                ScrollArea::vertical()
-                    .auto_shrink(false)
-                    .scroll_bar_visibility(ScrollBarVisibility::AlwaysVisible)
-                    .show(ui, |ui| match self.category {
-                        MagazineContentType::Tool => {
-                            let mut to_remove: Option<usize> = None;
-                            for (index, tool) in self.tools.iter_mut().enumerate() {
-                                ui.horizontal(|ui| {
-                                    ui.label(format!("Tool {}: ", index));
-                                    ui.separator();
-                                    tool.display(ui);
-                                    if ui.button("Delete").clicked() {
-                                        to_remove = Some(index);
-                                    }
-                                });
-                            }
-                            if to_remove.is_some() {
-                                self.tools.remove(to_remove.unwrap());
-                            }
-                        }
-                        MagazineContentType::Holder => {
-                            let mut to_remove: Option<usize> = None;
-                            for (index, holder) in self.holders.iter_mut().enumerate() {
-                                ui.horizontal(|ui| {
-                                    ui.label(format!("Holder {}: ", index));
-                                    holder.display(ui);
-                                    if ui.button("Delete").clicked() {
-                                        to_remove = Some(index);
-                                    }
-                                });
-                            }
-                            if to_remove.is_some() {
-                                self.holders.remove(to_remove.unwrap());
-                            }
-                        }
-                        MagazineContentType::Adapter => {
-                            let mut to_remove: Option<usize> = None;
-                            for (index, adapter) in self.adapters.iter_mut().enumerate() {
-                                ui.horizontal(|ui| {
-                                    ui.label(format!("Adapter {}: ", index));
-                                    adapter.display(ui);
-                                });
-                                if ui.button("Delete").clicked() {
-                                    to_remove = Some(index);
+
+                TableBuilder::new(ui)
+                    .columns(Column::auto().resizable(true).clip(false), 2)
+                    .header(20.0, |mut header| {
+                        header.col(|ui| {
+                            ui.heading("Slot");
+                        });
+                        header.col(|ui| {
+                            ui.heading("Tool/Holder/Adapter");
+                        });
+                    })
+                    .body(|mut body| {
+                        match self.category {
+                            MagazineContentType::Tool => {
+                                for (i, tool) in self.tools.iter().enumerate() {
+                                    body.row(30.0, |mut row| {
+                                        row.col(|ui| {
+                                            ui.label(format!("{}", i));
+                                        });
+                                        row.col(|ui| {
+                                            tool.display(ui);
+                                        });
+                                    })
                                 }
                             }
-                            if to_remove.is_some() {
-                                self.adapters.remove(to_remove.unwrap());
+                            MagazineContentType::Holder => {
+                                for (i, holder) in self.holders.iter().enumerate() {
+                                    body.row(30.0, |mut row| {
+                                        row.col(|ui| {
+                                            ui.label(format!("{}", i));
+                                        });
+                                        row.col(|ui| {
+                                            holder.display(ui);
+                                        });
+                                    })
+                                }
                             }
-                        }
+                            MagazineContentType::Adapter => {
+                                for (i, adapter) in self.adapters.iter().enumerate() {
+                                    body.row(30.0, |mut row| {
+                                        row.col(|ui| {
+                                            ui.label(format!("{}", i));
+                                        });
+                                        row.col(|ui| {
+                                            adapter.display(ui);
+                                        });
+                                    })
+                                }
+                            }
+                        };
                     });
             });
         is_window_open

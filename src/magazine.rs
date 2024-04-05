@@ -7,7 +7,7 @@ use crate::tool::*;
 use crate::ManagingApp;
 use crate::MoveStates;
 use crate::ToolState;
-
+use egui_extras::*;
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct Magazine {
     pub name: String,
@@ -126,54 +126,88 @@ pub fn get_filtered_by_tool_category(
 
 pub fn display_magazine(app: &mut ManagingApp, ui: &mut egui::Ui, _ctx: &egui::Context) {
     ui.label(app.display_magazine.name.clone());
-    for (_i, (index, tool, holder, adapter)) in app.display_magazine.contents.iter().enumerate() {
-        ui.horizontal(|ui| {
-            ui.label(format!("Slot {}", index));
-
-            ui.separator();
-            if ui.button("Add").clicked() {
-                app.move_selections.selected_tool_index_magazine = Some(*index);
-                app.app_states.move_state = Some(MoveStates::ToolToMagazine);
-            }
-            if ui.button("Remove").clicked() {
-                app.move_selections.selected_tool_index_magazine = Some(*index);
-                app.app_states.move_state = Some(MoveStates::ToolToLibrary);
-            }
-            if let Some(tool) = tool {
-                tool.display(ui);
-            } else {
-                ui.label("Empty");
-            }
-
-            ui.separator();
-            if ui.button("Add").clicked() {
-                app.move_selections.selected_holder_index_magazine = Some(*index);
-                app.app_states.move_state = Some(MoveStates::HolderToMagazine);
-            }
-            if ui.button("Remove").clicked() {
-                app.move_selections.selected_holder_index_magazine = Some(*index);
-                app.app_states.move_state = Some(MoveStates::HolderToLibrary);
-            }
-            if let Some(holder) = holder {
-                holder.display(ui);
-            } else {
-                ui.label("Empty");
-            }
-
-            ui.separator();
-            if ui.button("Add").clicked() {
-                app.move_selections.selected_adapter_index_magazine = Some(*index);
-                app.app_states.move_state = Some(MoveStates::AdapterToMagazine);
-            }
-            if ui.button("Remove").clicked() {
-                app.move_selections.selected_adapter_index_magazine = Some(*index);
-                app.app_states.move_state = Some(MoveStates::AdapterToLibrary);
-            }
-            if let Some(adapter) = adapter {
-                adapter.display(ui);
-            } else {
-                ui.label("Empty");
+    TableBuilder::new(ui)
+        .columns(Column::auto().resizable(true).clip(false), 5)
+        .header(20.0, |mut header| {
+            header.col(|ui| {
+                ui.heading("Slot");
+            });
+            header.col(|ui| {
+                ui.heading("Tool");
+            });
+            header.col(|ui| {
+                ui.heading("Holder");
+            });
+            header.col(|ui| {
+                ui.heading("Adapter");
+            });
+            header.col(|ui| {
+                ui.heading("Comment");
+            });
+        })
+        .body(|mut body| {
+            for (_i, (index, tool, holder, adapter)) in
+                app.display_magazine.contents.iter().enumerate()
+            {
+                body.row(30.0, |mut row| {
+                    row.col(|ui| {
+                        ui.label(format!("Slot {}", index));
+                    });
+                    row.col(|ui| {
+                        ui.horizontal(|ui| {
+                            if ui.button("Add").clicked() {
+                                app.move_selections.selected_tool_index_magazine = Some(*index);
+                                app.app_states.move_state = Some(MoveStates::ToolToMagazine);
+                            }
+                            if ui.button("Remove").clicked() {
+                                app.move_selections.selected_tool_index_magazine = Some(*index);
+                                app.app_states.move_state = Some(MoveStates::ToolToLibrary);
+                            }
+                            if let Some(tool) = tool {
+                                tool.display(ui);
+                            } else {
+                                ui.label("Empty");
+                            }
+                        });
+                    });
+                    row.col(|ui| {
+                        ui.horizontal(|ui| {
+                            if ui.button("Add").clicked() {
+                                app.move_selections.selected_holder_index_magazine = Some(*index);
+                                app.app_states.move_state = Some(MoveStates::HolderToMagazine);
+                            }
+                            if ui.button("Remove").clicked() {
+                                app.move_selections.selected_holder_index_magazine = Some(*index);
+                                app.app_states.move_state = Some(MoveStates::HolderToLibrary);
+                            }
+                            if let Some(holder) = holder {
+                                holder.display(ui);
+                            } else {
+                                ui.label("Empty");
+                            }
+                        });
+                    });
+                    row.col(|ui| {
+                        ui.horizontal(|ui| {
+                            if ui.button("Add").clicked() {
+                                app.move_selections.selected_adapter_index_magazine = Some(*index);
+                                app.app_states.move_state = Some(MoveStates::AdapterToMagazine);
+                            }
+                            if ui.button("Remove").clicked() {
+                                app.move_selections.selected_adapter_index_magazine = Some(*index);
+                                app.app_states.move_state = Some(MoveStates::AdapterToLibrary);
+                            }
+                            if let Some(adapter) = adapter {
+                                adapter.display(ui);
+                            } else {
+                                ui.label("Empty");
+                            }
+                        });
+                    });
+                    row.col(|ui| {
+                        ui.label("Comment");
+                    });
+                });
             }
         });
-    }
 }
