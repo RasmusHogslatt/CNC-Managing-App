@@ -1,6 +1,7 @@
 use crate::magazine::*;
 use crate::reset_states;
 
+use crate::Comment;
 use crate::ManagingApp;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
@@ -76,7 +77,9 @@ pub fn add_machine(app: &mut ManagingApp, ctx: &egui::Context) {
                         contents: Vec::new(),
                     };
                     for i in 0..app.gui_singletons.machine.magazine_size {
-                        current_magazine.contents.push((i, None, None, None));
+                        current_magazine
+                            .contents
+                            .push((i, None, None, None, Comment::default()));
                     }
                     current_magazine.name = format!("Magazine {}", magazines.len());
                     magazines.push(current_magazine);

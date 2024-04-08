@@ -20,6 +20,7 @@ pub struct MagazineLibraryMovingSelections {
     pub selected_tool_index_magazine: Option<usize>,
     pub selected_holder_index_magazine: Option<usize>,
     pub selected_adapter_index_magazine: Option<usize>,
+    pub selected_comment_index_magazine: Option<usize>,
 
     pub selected_tool_index_library: Option<usize>,
     pub selected_holder_index_library: Option<usize>,
@@ -56,6 +57,7 @@ pub enum MoveStates {
     HolderToLibrary,
     AdapterToMagazine,
     AdapterToLibrary,
+    EditComment,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Default, PartialEq, Eq)]

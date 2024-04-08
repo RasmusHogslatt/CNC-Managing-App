@@ -182,6 +182,9 @@ impl eframe::App for ManagingApp {
                     MoveStates::AdapterToLibrary => {
                         move_adapter_to_library(self);
                     }
+                    MoveStates::EditComment => {
+                        edit_comment(self, ctx);
+                    }
                 },
                 None => {}
             }

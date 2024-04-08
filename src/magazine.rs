@@ -3,6 +3,8 @@ use std::cmp::Ordering;
 use crate::adapter::*;
 use crate::holder::*;
 
+use crate::comment::*;
+use crate::reset_states;
 use crate::tool::*;
 use crate::ManagingApp;
 use crate::MoveStates;
@@ -11,7 +13,13 @@ use egui_extras::*;
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct Magazine {
     pub name: String,
-    pub contents: Vec<(usize, Option<Tool>, Option<Holder>, Option<Adapter>)>,
+    pub contents: Vec<(
+        usize,
+        Option<Tool>,
+        Option<Holder>,
+        Option<Adapter>,
+        Comment,
+    )>,
 }
 
 pub fn select_magazine(app: &mut ManagingApp, ui: &mut egui::Ui) {
@@ -39,9 +47,21 @@ pub fn select_magazine(app: &mut ManagingApp, ui: &mut egui::Ui) {
 }
 
 pub fn get_sorted_by_slot(
-    contents: &mut Vec<(usize, Option<Tool>, Option<Holder>, Option<Adapter>)>,
+    contents: &mut Vec<(
+        usize,
+        Option<Tool>,
+        Option<Holder>,
+        Option<Adapter>,
+        Comment,
+    )>,
     filter: Option<ToolState>,
-) -> Vec<(usize, Option<Tool>, Option<Holder>, Option<Adapter>)> {
+) -> Vec<(
+    usize,
+    Option<Tool>,
+    Option<Holder>,
+    Option<Adapter>,
+    Comment,
+)> {
     let mut filtered = match filter {
         Some(ToolState::Rotating) => {
             get_filtered_by_tool_category(contents, ToolCategory::Rotating)
@@ -52,9 +72,23 @@ pub fn get_sorted_by_slot(
         _ => contents.clone(),
     };
 
-    let mut sorted: Vec<(usize, Option<Tool>, Option<Holder>, Option<Adapter>)> = filtered
+    let mut sorted: Vec<(
+        usize,
+        Option<Tool>,
+        Option<Holder>,
+        Option<Adapter>,
+        Comment,
+    )> = filtered
         .iter_mut()
-        .map(|(i, tool, holder, adapter)| (*i, tool.clone(), holder.clone(), adapter.clone()))
+        .map(|(i, tool, holder, adapter, comment)| {
+            (
+                *i,
+                tool.clone(),
+                holder.clone(),
+                adapter.clone(),
+                comment.clone(),
+            )
+        })
         .collect();
 
     sorted.sort_by(|(i_a, ..), (i_b, ..)| i_a.partial_cmp(i_b).unwrap_or(Ordering::Equal));
@@ -62,16 +96,42 @@ pub fn get_sorted_by_slot(
 }
 
 pub fn get_sorted_by_tool_diameter(
-    contents: &mut Vec<(usize, Option<Tool>, Option<Holder>, Option<Adapter>)>,
-) -> Vec<(usize, Option<Tool>, Option<Holder>, Option<Adapter>)> {
-    let mut filtered: Vec<(usize, Option<Tool>, Option<Holder>, Option<Adapter>)> = contents
+    contents: &mut Vec<(
+        usize,
+        Option<Tool>,
+        Option<Holder>,
+        Option<Adapter>,
+        Comment,
+    )>,
+) -> Vec<(
+    usize,
+    Option<Tool>,
+    Option<Holder>,
+    Option<Adapter>,
+    Comment,
+)> {
+    let mut filtered: Vec<(
+        usize,
+        Option<Tool>,
+        Option<Holder>,
+        Option<Adapter>,
+        Comment,
+    )> = contents
         .iter_mut()
-        .filter(|(_u32, tool, _holder, _adapter)| {
+        .filter(|(_u32, tool, _holder, _adapter, comment)| {
             tool.clone()
                 .map(|t| t.get_category() == ToolCategory::Rotating)
                 .unwrap_or(false)
         })
-        .map(|(i, tool, holder, adapter)| (*i, tool.clone(), holder.clone(), adapter.clone()))
+        .map(|(i, tool, holder, adapter, comment)| {
+            (
+                *i,
+                tool.clone(),
+                holder.clone(),
+                adapter.clone(),
+                comment.clone(),
+            )
+        })
         .collect();
 
     filtered.sort_by(|(_i_a, tool_a, ..), (_i_b, tool_b, ..)| {
@@ -86,16 +146,42 @@ pub fn get_sorted_by_tool_diameter(
 }
 
 pub fn get_sorted_by_degree(
-    contents: &mut Vec<(usize, Option<Tool>, Option<Holder>, Option<Adapter>)>,
-) -> Vec<(usize, Option<Tool>, Option<Holder>, Option<Adapter>)> {
-    let mut filtered: Vec<(usize, Option<Tool>, Option<Holder>, Option<Adapter>)> = contents
+    contents: &mut Vec<(
+        usize,
+        Option<Tool>,
+        Option<Holder>,
+        Option<Adapter>,
+        Comment,
+    )>,
+) -> Vec<(
+    usize,
+    Option<Tool>,
+    Option<Holder>,
+    Option<Adapter>,
+    Comment,
+)> {
+    let mut filtered: Vec<(
+        usize,
+        Option<Tool>,
+        Option<Holder>,
+        Option<Adapter>,
+        Comment,
+    )> = contents
         .iter_mut()
-        .filter(|(_u32, tool, _holder, _adapter)| {
+        .filter(|(_u32, tool, _holder, _adapter, comment)| {
             tool.clone()
                 .map(|t| t.get_category() == ToolCategory::LatheInsert)
                 .unwrap_or(false)
         })
-        .map(|(i, tool, holder, adapter)| (*i, tool.clone(), holder.clone(), adapter.clone()))
+        .map(|(i, tool, holder, adapter, comment)| {
+            (
+                *i,
+                tool.clone(),
+                holder.clone(),
+                adapter.clone(),
+                comment.clone(),
+            )
+        })
         .collect();
 
     filtered.sort_by(|(_i_a, tool_a, ..), (_i_b, tool_b, ..)| {
@@ -110,17 +196,37 @@ pub fn get_sorted_by_degree(
 }
 
 pub fn get_filtered_by_tool_category(
-    contents: &mut Vec<(usize, Option<Tool>, Option<Holder>, Option<Adapter>)>,
+    contents: &mut Vec<(
+        usize,
+        Option<Tool>,
+        Option<Holder>,
+        Option<Adapter>,
+        Comment,
+    )>,
     category: ToolCategory,
-) -> Vec<(usize, Option<Tool>, Option<Holder>, Option<Adapter>)> {
+) -> Vec<(
+    usize,
+    Option<Tool>,
+    Option<Holder>,
+    Option<Adapter>,
+    Comment,
+)> {
     contents
         .iter_mut()
-        .filter(|(_usize, tool, _holder, _adapter)| {
+        .filter(|(_usize, tool, _holder, _adapter, comment)| {
             tool.clone()
                 .map(|t| t.get_category() == category)
                 .unwrap_or(false)
         })
-        .map(|(i, tool, holder, adapter)| (*i, tool.clone(), holder.clone(), adapter.clone()))
+        .map(|(i, tool, holder, adapter, comment)| {
+            (
+                *i,
+                tool.clone(),
+                holder.clone(),
+                adapter.clone(),
+                comment.clone(),
+            )
+        })
         .collect()
 }
 
@@ -146,7 +252,7 @@ pub fn display_magazine(app: &mut ManagingApp, ui: &mut egui::Ui, _ctx: &egui::C
             });
         })
         .body(|mut body| {
-            for (_i, (index, tool, holder, adapter)) in
+            for (_i, (index, tool, holder, adapter, comment)) in
                 app.display_magazine.contents.iter().enumerate()
             {
                 body.row(30.0, |mut row| {
@@ -205,9 +311,38 @@ pub fn display_magazine(app: &mut ManagingApp, ui: &mut egui::Ui, _ctx: &egui::C
                         });
                     });
                     row.col(|ui| {
-                        ui.label("Comment");
+                        ui.horizontal(|ui| {
+                            if ui.button("Edit").clicked() {
+                                app.move_selections.selected_comment_index_magazine = Some(*index);
+                                app.app_states.move_state = Some(MoveStates::EditComment);
+                            }
+                            comment.clone().display(ui);
+                        });
                     });
                 });
             }
         });
+}
+
+pub fn edit_comment(app: &mut ManagingApp, ctx: &egui::Context) {
+    let magazine_index = app.move_selections.selected_comment_index_magazine;
+    let machine = &mut app.machines[app.selections.machine.unwrap()];
+    let magazine = &mut machine.magazines[machine.current_magazine.unwrap()];
+    if magazine_index.is_none() {
+        return;
+    }
+    let comment = &mut magazine.contents[magazine_index.unwrap()].4.comment;
+    let mut edit_done = false;
+    egui::Window::new("Edit comment").show(ctx, |ui| {
+        ui.text_edit_multiline(comment);
+        if ui.button("OK").clicked() {
+            edit_done = true;
+        }
+    });
+    app.display_magazine = magazine.clone();
+    if edit_done {
+        app.move_selections.selected_comment_index_magazine = None;
+        app.app_states.move_state = None;
+        reset_states(app);
+    }
 }

@@ -2,6 +2,7 @@
 
 mod adapters;
 mod app;
+mod comment;
 mod holders;
 mod library;
 mod machine;
@@ -11,6 +12,7 @@ mod tools;
 
 pub use adapters::*;
 pub use app::*;
+pub use comment::*;
 pub use holders::*;
 pub use library::*;
 pub use machine::*;
