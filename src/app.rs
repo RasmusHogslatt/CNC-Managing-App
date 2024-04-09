@@ -207,6 +207,7 @@ pub fn reset_states(app: &mut ManagingApp) {
     app.move_selections.selected_tool_index_library = None;
     app.move_selections.selected_holder_index_library = None;
     app.move_selections.selected_adapter_index_library = None;
+    app.move_selections.selected_comment_index_magazine = None;
 }
 
 pub fn filter_by_tool_category(app: &mut ManagingApp, ui: &mut egui::Ui) {

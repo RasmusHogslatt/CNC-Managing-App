@@ -118,7 +118,7 @@ pub fn get_sorted_by_tool_diameter(
         Comment,
     )> = contents
         .iter_mut()
-        .filter(|(_u32, tool, _holder, _adapter, comment)| {
+        .filter(|(_u32, tool, _holder, _adapter, _comment)| {
             tool.clone()
                 .map(|t| t.get_category() == ToolCategory::Rotating)
                 .unwrap_or(false)
@@ -168,7 +168,7 @@ pub fn get_sorted_by_degree(
         Comment,
     )> = contents
         .iter_mut()
-        .filter(|(_u32, tool, _holder, _adapter, comment)| {
+        .filter(|(_u32, tool, _holder, _adapter, _comment)| {
             tool.clone()
                 .map(|t| t.get_category() == ToolCategory::LatheInsert)
                 .unwrap_or(false)
@@ -213,7 +213,7 @@ pub fn get_filtered_by_tool_category(
 )> {
     contents
         .iter_mut()
-        .filter(|(_usize, tool, _holder, _adapter, comment)| {
+        .filter(|(_usize, tool, _holder, _adapter, _comment)| {
             tool.clone()
                 .map(|t| t.get_category() == category)
                 .unwrap_or(false)
@@ -312,11 +312,12 @@ pub fn display_magazine(app: &mut ManagingApp, ui: &mut egui::Ui, _ctx: &egui::C
                     });
                     row.col(|ui| {
                         ui.horizontal(|ui| {
+                            ui.set_width(100.0);
                             if ui.button("Edit").clicked() {
                                 app.move_selections.selected_comment_index_magazine = Some(*index);
                                 app.app_states.move_state = Some(MoveStates::EditComment);
                             }
-                            comment.clone().display(ui);
+                            comment.display(ui);
                         });
                     });
                 });
@@ -339,10 +340,8 @@ pub fn edit_comment(app: &mut ManagingApp, ctx: &egui::Context) {
             edit_done = true;
         }
     });
-    app.display_magazine = magazine.clone();
     if edit_done {
-        app.move_selections.selected_comment_index_magazine = None;
-        app.app_states.move_state = None;
+        app.display_magazine = magazine.clone();
         reset_states(app);
     }
 }
