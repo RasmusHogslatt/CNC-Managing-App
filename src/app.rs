@@ -10,6 +10,7 @@ use crate::magazine::*;
 use crate::tool::*;
 
 use crate::resources::*;
+use egui::widgets::color_picker::*;
 
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)]
@@ -18,6 +19,7 @@ pub struct ManagingApp {
     pub selections: Selections,
     pub app_states: ActiveState,
     pub library: Library,
+    pub color_preferences: ColorPreferences,
     #[serde(skip)]
     pub gui_singletons: GuiSingletons,
     pub display_magazine: Magazine,
@@ -38,6 +40,7 @@ impl Default for ManagingApp {
                 contents: Vec::new(),
             },
             move_selections: MagazineLibraryMovingSelections::default(),
+            color_preferences: ColorPreferences::default(),
         }
     }
 }
@@ -87,7 +90,12 @@ impl eframe::App for ManagingApp {
             .resizable(false)
             .default_width(300.0)
             .show(ctx, |ui| {
-                egui::widgets::global_dark_light_mode_buttons(ui);
+                ui.horizontal(|ui| {
+                    egui::widgets::global_dark_light_mode_buttons(ui);
+                    if ui.button("Settings").clicked() {
+                        self.app_states.app_state = AppState::Settings;
+                    }
+                });
                 ui.separator();
                 if ui
                     .add(egui::Button::new("Show library"))
@@ -140,9 +148,10 @@ impl eframe::App for ManagingApp {
         egui::CentralPanel::default().show(ctx, |ui| {
             filter_by_tool_category(self, ui);
             sort_by(self, ui);
+            display_magazine(self, ui, ctx);
             match self.app_states.app_state {
                 AppState::ShowMagazine => {
-                    display_magazine(self, ui, ctx); // TODO: Change to clone stuff
+                    // display_magazine(self, ui, ctx);
                 }
                 AppState::AddTool => add_tool(self, ctx),
                 AppState::AddHolder => add_holder(self, ctx),
@@ -153,6 +162,7 @@ impl eframe::App for ManagingApp {
                         reset_states(self);
                     }
                 }
+                AppState::Settings => settings(self, ctx),
             }
 
             match &self.app_states.move_state {
@@ -322,4 +332,26 @@ pub fn sort_by(app: &mut ManagingApp, ui: &mut egui::Ui) {
                 }
             });
     });
+}
+
+pub fn settings(app: &mut ManagingApp, ctx: &egui::Context) {
+    let mut is_window_open = true;
+    let color_preferences = &mut app.color_preferences;
+    egui::Window::new("Settings")
+        .open(&mut is_window_open)
+        .show(ctx, |ui| {
+            // combobox for selecting the color to change
+            match app.color_preferences {}
+            ui.horizontal(|ui| {
+                egui::widgets::color_picker::color_picker_color32(
+                    ui,
+                    &mut app.color_preferences.drill,
+                    Alpha::Opaque,
+                );
+            });
+        });
+
+    if !is_window_open {
+        reset_states(app);
+    }
 }

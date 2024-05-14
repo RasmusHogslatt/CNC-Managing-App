@@ -1,5 +1,7 @@
 use std::fmt;
 
+use egui::Color32;
+
 use crate::{
     adapter::Adapter, collet::Collet, drill::Drill, holder::Holder, hydraulic::Hydraulic,
     mill::Mill, tool::Tool, trigoninsert::TrigonInsert, Machine,
@@ -46,6 +48,7 @@ pub enum AppState {
     AddAdapter,
     AddMachine,
     ShowLibrary,
+    Settings,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Default)]
@@ -171,4 +174,13 @@ impl Default for GuiSingletons {
             sort_by: SortBy::Slot,
         }
     }
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Default)]
+pub struct ColorPreferences {
+    pub drill: Color32,
+    pub mill: Color32,
+    pub trigon_insert: Color32,
+    pub collet: Color32,
+    pub hydraulic: Color32,
 }

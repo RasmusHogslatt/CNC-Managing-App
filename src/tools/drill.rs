@@ -1,15 +1,19 @@
+use egui::Color32;
+
 use crate::tool::ToolCategory;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq)]
 pub struct Drill {
     pub name: String,
     pub diameter: f32,
+    pub color: Color32,
 }
 impl Default for Drill {
     fn default() -> Self {
         Self {
             name: "Drill".to_string(),
             diameter: 10.0,
+            color: Color32::RED,
         }
     }
 }
@@ -32,6 +36,7 @@ impl Drill {
                 ui.label("Name:");
 
                 ui.label(&self.name);
+                ui.colored_label(Color32::RED, &self.name);
             });
             ui.separator();
             ui.horizontal(|ui| {
