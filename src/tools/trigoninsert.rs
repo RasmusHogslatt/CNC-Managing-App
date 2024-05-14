@@ -1,15 +1,18 @@
 use crate::tool::ToolCategory;
+use egui::Color32;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq)]
 pub struct TrigonInsert {
     pub name: String,
     pub degree: f32,
+    pub color: Color32,
 }
 impl Default for TrigonInsert {
     fn default() -> Self {
         Self {
             name: "Trigon insert".to_string(),
             degree: 35.0,
+            color: Color32::GREEN,
         }
     }
 }

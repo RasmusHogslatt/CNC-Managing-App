@@ -1,9 +1,11 @@
 use crate::tool::ToolCategory;
+use egui::Color32;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq)]
 pub struct Mill {
     pub name: String,
     pub diameter: f32,
+    pub color: Color32,
 }
 
 impl Default for Mill {
@@ -11,6 +13,7 @@ impl Default for Mill {
         Self {
             name: "Mill".to_string(),
             diameter: 10.0,
+            color: Color32::BLUE,
         }
     }
 }

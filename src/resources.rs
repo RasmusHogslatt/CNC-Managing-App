@@ -1,6 +1,8 @@
 use std::fmt;
 
 use egui::Color32;
+use env_logger::fmt::Color;
+use strum_macros::{Display, EnumIter, EnumString};
 
 use crate::{
     adapter::Adapter, collet::Collet, drill::Drill, holder::Holder, hydraulic::Hydraulic,
@@ -117,6 +119,37 @@ impl fmt::Display for SortBy {
     }
 }
 
+#[derive(
+    serde::Serialize,
+    serde::Deserialize,
+    Debug,
+    Clone,
+    Default,
+    PartialEq,
+    Eq,
+    EnumIter,
+    EnumString,
+    Display,
+)]
+pub enum ColorSettingsState {
+    #[default]
+    Rotating,
+    Insert,
+    Holder,
+    Adapter,
+}
+
+// impl fmt::Display for ColorSettingsState {
+//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//         match self {
+//             ColorSettingsState::Rotating => write!(f, "Rotating"),
+//             ColorSettingsState::Insert => write!(f, "Insert"),
+//             ColorSettingsState::Holder => write!(f, "Holder"),
+//             ColorSettingsState::Adapter => write!(f, "Adapter"),
+//         }
+//     }
+// }
+
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct GuiSingletons {
     pub rotating_tools: Vec<Tool>,
@@ -127,6 +160,8 @@ pub struct GuiSingletons {
 
     pub tool_filter: Option<ToolState>,
     pub sort_by: SortBy,
+
+    pub color_settings_state: ColorSettingsState,
 }
 
 impl Default for GuiSingletons {
@@ -135,15 +170,18 @@ impl Default for GuiSingletons {
         let drill = Drill {
             name: "Drill".to_string(),
             diameter: 10.0,
+            color: Color32::RED,
         };
         let mill = Mill {
             name: "Mill".to_string(),
             diameter: 10.0,
+            color: Color32::BLUE,
         };
         // Insert tools
         let trigon_insert = TrigonInsert {
             name: "TrigonInsert".to_string(),
             degree: 35.0,
+            color: Color32::GREEN,
         };
         // Holders
         let collet = Collet {
@@ -172,15 +210,7 @@ impl Default for GuiSingletons {
             machine,
             tool_filter: None,
             sort_by: SortBy::Slot,
+            color_settings_state: ColorSettingsState::Rotating,
         }
     }
-}
-
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Default)]
-pub struct ColorPreferences {
-    pub drill: Color32,
-    pub mill: Color32,
-    pub trigon_insert: Color32,
-    pub collet: Color32,
-    pub hydraulic: Color32,
 }

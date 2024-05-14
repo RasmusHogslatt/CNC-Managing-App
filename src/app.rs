@@ -1,3 +1,4 @@
+use egui::Color32;
 use egui::Visuals;
 
 use crate::adapter::*;
@@ -19,7 +20,6 @@ pub struct ManagingApp {
     pub selections: Selections,
     pub app_states: ActiveState,
     pub library: Library,
-    pub color_preferences: ColorPreferences,
     #[serde(skip)]
     pub gui_singletons: GuiSingletons,
     pub display_magazine: Magazine,
@@ -40,7 +40,6 @@ impl Default for ManagingApp {
                 contents: Vec::new(),
             },
             move_selections: MagazineLibraryMovingSelections::default(),
-            color_preferences: ColorPreferences::default(),
         }
     }
 }
@@ -334,18 +333,50 @@ pub fn sort_by(app: &mut ManagingApp, ui: &mut egui::Ui) {
     });
 }
 
+pub fn set_color_setting_state(ctx: &egui::Context, selected: &mut ColorSettingsState) {
+    egui::CentralPanel::default().show(ctx, |ui| {
+        // Using a combo box to select the state
+        egui::ComboBox::from_label("Color Settings")
+            .selected_text(format!("{:?}", selected))
+            .show_ui(ui, |ui| {
+                for state in ColorSettingsState::iter() {
+                    ui.selectable_value(selected, state, state.to_string());
+                }
+            });
+    });
+}
+
 pub fn settings(app: &mut ManagingApp, ctx: &egui::Context) {
     let mut is_window_open = true;
-    let color_preferences = &mut app.color_preferences;
+
+    let mut tool_color = Color32::RED;
+
+    set_color_setting_state(ctx, &mut app.gui_singletons.color_settings_state);
+
     egui::Window::new("Settings")
         .open(&mut is_window_open)
         .show(ctx, |ui| {
-            // combobox for selecting the color to change
-            match app.color_preferences {}
+            // combobox for selecting the tool type to change color for
+            egui::ComboBox::from_label("Select type of tool").show_ui(ui, |ui| {
+                // get index to selected tool
+                for (i, tool) in app.gui_singletons.rotating_tools.iter().enumerate() {
+                    let label = match tool {
+                        Tool::Drill(drill) => drill.name.clone(),
+                        Tool::Mill(mill) => mill.name.clone(),
+                        Tool::TrigonInsert(trigon_insert) => trigon_insert.name.clone(),
+                    };
+                    if ui
+                        .selectable_label(app.selections.selected_rotating_tool_index == i, label)
+                        .clicked()
+                    {
+                        app.selections.selected_rotating_tool_index = i;
+                    }
+                }
+            });
             ui.horizontal(|ui| {
                 egui::widgets::color_picker::color_picker_color32(
                     ui,
-                    &mut app.color_preferences.drill,
+                    &mut tool_color,
                     Alpha::Opaque,
                 );
             });
