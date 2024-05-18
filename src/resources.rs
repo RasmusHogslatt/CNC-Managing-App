@@ -1,8 +1,8 @@
 use std::fmt;
 
 use egui::Color32;
-use env_logger::fmt::Color;
-use strum_macros::{Display, EnumIter, EnumString};
+
+use strum::{Display, EnumIter, EnumString};
 
 use crate::{
     adapter::Adapter, collet::Collet, drill::Drill, holder::Holder, hydraulic::Hydraulic,
@@ -139,16 +139,11 @@ pub enum ColorSettingsState {
     Adapter,
 }
 
-// impl fmt::Display for ColorSettingsState {
-//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-//         match self {
-//             ColorSettingsState::Rotating => write!(f, "Rotating"),
-//             ColorSettingsState::Insert => write!(f, "Insert"),
-//             ColorSettingsState::Holder => write!(f, "Holder"),
-//             ColorSettingsState::Adapter => write!(f, "Adapter"),
-//         }
-//     }
-// }
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Default, PartialEq, Eq)]
+pub struct ColorSettings {
+    pub index: Option<usize>,
+    pub color: Color32,
+}
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct GuiSingletons {
@@ -162,6 +157,7 @@ pub struct GuiSingletons {
     pub sort_by: SortBy,
 
     pub color_settings_state: ColorSettingsState,
+    pub color_settings: ColorSettings,
 }
 
 impl Default for GuiSingletons {
@@ -186,12 +182,16 @@ impl Default for GuiSingletons {
         // Holders
         let collet = Collet {
             name: "Collet".to_string(),
+            color: Color32::LIGHT_BLUE,
         };
         // Adapters
         let hydraulic = Hydraulic {
             name: "Hydraulic".to_string(),
+            color: Color32::GREEN,
         };
-        let rotating_tools = vec![Tool::Drill(drill), Tool::Mill(mill)];
+        let mut rotating_tools = Vec::<Tool>::new();
+        rotating_tools.push(Tool::Drill(drill.clone()));
+        rotating_tools.push(Tool::Mill(mill.clone())); // vec![Tool::Drill(drill), Tool::Mill(mill)];
         let insert_tools = vec![Tool::TrigonInsert(trigon_insert)];
         let holders = vec![Holder::Collet(collet)];
         let adapters = vec![Adapter::Hydraulic(hydraulic)];
@@ -211,6 +211,10 @@ impl Default for GuiSingletons {
             tool_filter: None,
             sort_by: SortBy::Slot,
             color_settings_state: ColorSettingsState::Rotating,
+            color_settings: ColorSettings {
+                index: None,
+                color: Color32::RED,
+            },
         }
     }
 }

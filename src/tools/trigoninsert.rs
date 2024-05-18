@@ -32,8 +32,7 @@ impl TrigonInsert {
     pub fn display(&self, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
             ui.horizontal(|ui| {
-                ui.label("Name:");
-                ui.label(&self.name);
+                ui.colored_label(self.color, &self.name);
             });
             ui.separator();
             ui.horizontal(|ui| {
@@ -49,5 +48,17 @@ impl TrigonInsert {
 
     pub fn get_degree(&self) -> f32 {
         self.degree
+    }
+
+    pub fn get_name(&self) -> String {
+        self.name.clone()
+    }
+
+    pub fn set_color(&mut self, color: Color32) {
+        self.color = color;
+    }
+
+    pub fn get_type(&self) -> String {
+        "Trigon".to_string()
     }
 }

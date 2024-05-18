@@ -1,12 +1,18 @@
+use egui::Color32;
+
+use crate::adapter::AdapterCategory;
+
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct Hydraulic {
     pub name: String,
+    pub color: Color32,
 }
 
 impl Default for Hydraulic {
     fn default() -> Self {
         Self {
             name: "Hydraulic".to_string(),
+            color: Color32::GREEN,
         }
     }
 }
@@ -25,9 +31,28 @@ impl Hydraulic {
     pub fn display(&self, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
             ui.horizontal(|ui| {
-                ui.label("Name:");
-                ui.label(&self.name);
+                ui.colored_label(self.color, &self.name);
             });
         });
+    }
+
+    pub fn get_name(&self) -> String {
+        self.name.clone()
+    }
+
+    pub fn set_color(&mut self, color: Color32) {
+        self.color = color;
+    }
+
+    pub fn get_color(&self) -> Color32 {
+        self.color
+    }
+
+    pub fn get_category(&self) -> AdapterCategory {
+        AdapterCategory::Standard
+    }
+
+    pub fn get_type(&self) -> String {
+        "Hydraulic".to_string()
     }
 }

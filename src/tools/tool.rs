@@ -1,3 +1,5 @@
+use egui::Color32;
+
 use crate::app::*;
 use crate::drill::Drill;
 use crate::mill::Mill;
@@ -58,6 +60,38 @@ impl Tool {
             Tool::Drill(_) => 0.0,
             Tool::Mill(_) => 0.0,
             Tool::TrigonInsert(trigon_insert) => trigon_insert.degree,
+        }
+    }
+
+    pub fn get_name(&self) -> String {
+        match self {
+            Tool::Drill(drill) => drill.name.clone(),
+            Tool::Mill(mill) => mill.name.clone(),
+            Tool::TrigonInsert(trigon_insert) => trigon_insert.name.clone(),
+        }
+    }
+
+    pub fn set_color(&mut self, color: Color32) {
+        match self {
+            Tool::Drill(drill) => drill.set_color(color),
+            Tool::Mill(mill) => mill.set_color(color),
+            Tool::TrigonInsert(trigon) => trigon.set_color(color),
+        }
+    }
+
+    pub fn get_color(&self) -> Color32 {
+        match self {
+            Tool::Drill(drill) => drill.get_color(),
+            Tool::Mill(mill) => mill.get_color(),
+            Tool::TrigonInsert(trigon) => trigon.color,
+        }
+    }
+
+    pub fn get_type(&self) -> String {
+        match self {
+            Tool::Drill(drill) => drill.get_type(),
+            Tool::Mill(mill) => mill.get_type(),
+            Tool::TrigonInsert(trigon) => trigon.get_type(),
         }
     }
 }

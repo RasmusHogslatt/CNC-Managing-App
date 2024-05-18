@@ -1,3 +1,5 @@
+use egui::Color32;
+
 use crate::app::*;
 use crate::collet::*;
 use crate::resources::*;
@@ -28,6 +30,36 @@ impl Holder {
     pub fn display(&self, ui: &mut egui::Ui) {
         match self {
             Holder::Collet(collet) => collet.display(ui),
+        }
+    }
+
+    pub fn get_name(&self) -> String {
+        match self {
+            Holder::Collet(collet) => collet.name.clone(),
+        }
+    }
+
+    pub fn set_color(&mut self, color: Color32) {
+        match self {
+            Holder::Collet(collet) => collet.set_color(color),
+        }
+    }
+
+    pub fn get_color(&self) -> Color32 {
+        match self {
+            Holder::Collet(collet) => collet.color,
+        }
+    }
+
+    pub fn get_category(&self) -> HolderCategory {
+        match self {
+            Holder::Collet(_) => HolderCategory::MillingHolder,
+        }
+    }
+
+    pub fn get_type(&self) -> String {
+        match self {
+            Holder::Collet(collet) => collet.get_type(),
         }
     }
 }

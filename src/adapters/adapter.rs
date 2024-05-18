@@ -1,3 +1,5 @@
+use egui::Color32;
+
 use crate::app::*;
 use crate::hydraulic::*;
 use crate::resources::*;
@@ -24,6 +26,36 @@ impl Adapter {
     pub fn display(&self, ui: &mut egui::Ui) {
         match self {
             Adapter::Hydraulic(hydraulic) => hydraulic.display(ui),
+        }
+    }
+
+    pub fn get_name(&self) -> String {
+        match self {
+            Adapter::Hydraulic(hydraulic) => hydraulic.name.clone(),
+        }
+    }
+
+    pub fn set_color(&mut self, color: Color32) {
+        match self {
+            Adapter::Hydraulic(hydraulic) => hydraulic.set_color(color),
+        }
+    }
+
+    pub fn get_color(&self) -> Color32 {
+        match self {
+            Adapter::Hydraulic(hydraulic) => hydraulic.color,
+        }
+    }
+
+    pub fn get_category(&self) -> AdapterCategory {
+        match self {
+            Adapter::Hydraulic(_) => AdapterCategory::Standard,
+        }
+    }
+
+    pub fn get_type(&self) -> String {
+        match self {
+            Adapter::Hydraulic(hydraulic) => hydraulic.get_type(),
         }
     }
 }
