@@ -129,9 +129,9 @@ pub fn add_rotating_tool(app: &mut ManagingApp, ui: &mut egui::Ui, should_add_to
         .rotating_tools
         .get(app.selections.selected_rotating_tool_index)
     {
-        Some(Tool::Drill(drill)) => drill.name.clone(),
-        Some(Tool::Mill(mill)) => mill.name.clone(),
-        Some(Tool::TrigonInsert(trigon_insert)) => trigon_insert.name.clone(),
+        Some(Tool::Drill(drill)) => drill.get_type(),
+        Some(Tool::Mill(mill)) => mill.get_type(),
+        Some(Tool::TrigonInsert(trigon_insert)) => trigon_insert.get_type(),
         None => String::from("Select tool"),
     };
 
@@ -141,9 +141,9 @@ pub fn add_rotating_tool(app: &mut ManagingApp, ui: &mut egui::Ui, should_add_to
             // get index to selected tool
             for (i, tool) in app.gui_singletons.rotating_tools.iter().enumerate() {
                 let label = match tool {
-                    Tool::Drill(drill) => drill.name.clone(),
-                    Tool::Mill(mill) => mill.name.clone(),
-                    Tool::TrigonInsert(trigon_insert) => trigon_insert.name.clone(),
+                    Tool::Drill(drill) => drill.get_type(),
+                    Tool::Mill(mill) => mill.get_type(),
+                    Tool::TrigonInsert(trigon_insert) => trigon_insert.get_type(),
                 };
                 if ui
                     .selectable_label(app.selections.selected_rotating_tool_index == i, label)

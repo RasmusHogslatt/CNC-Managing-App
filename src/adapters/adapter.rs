@@ -99,7 +99,7 @@ pub fn add_standard_adapter(
         .adapters
         .get(app.selections.selected_adapter_index)
     {
-        Some(Adapter::Hydraulic(hydraulic)) => hydraulic.name.clone(),
+        Some(Adapter::Hydraulic(hydraulic)) => hydraulic.get_type(),
         None => "Select adapter".to_string(),
     };
     egui::ComboBox::from_label("Adapter")
@@ -107,7 +107,7 @@ pub fn add_standard_adapter(
         .show_ui(ui, |ui| {
             for (i, adapter) in app.gui_singletons.adapters.iter().enumerate() {
                 let label = match adapter {
-                    Adapter::Hydraulic(hydraulic) => hydraulic.name.clone(),
+                    Adapter::Hydraulic(hydraulic) => hydraulic.get_type(),
                 };
                 if ui
                     .selectable_label(app.selections.selected_adapter_index == i, label)

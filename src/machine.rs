@@ -92,7 +92,13 @@ pub fn add_machine(app: &mut ManagingApp, ctx: &egui::Context) {
                     current_magazine: Some(0),
                 };
                 app.machines.push(machine.clone());
+                let machine_index = app.machines.len() - 1;
 
+                app.selections.machine = Some(machine_index);
+                app.machines[machine_index].current_magazine = Some(0);
+
+                let magazines = &app.machines[machine_index].magazines;
+                app.display_magazine.contents = magazines[0].contents.clone();
                 app.gui_singletons.machine = Machine {
                     name: "Machine".to_string(),
                     magazines: Vec::new(),
@@ -100,6 +106,7 @@ pub fn add_machine(app: &mut ManagingApp, ctx: &egui::Context) {
                     magazine_size: 1,
                     current_magazine: None,
                 };
+
                 should_add_machine = false;
                 reset_states(app);
             }

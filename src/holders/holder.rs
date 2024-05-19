@@ -108,7 +108,7 @@ pub fn add_standard_holder(app: &mut ManagingApp, ui: &mut egui::Ui, should_add_
             // get index to selected holder
             for (i, holder) in app.gui_singletons.holders.iter().enumerate() {
                 let label = match holder {
-                    Holder::Collet(collet) => collet.name.clone(),
+                    Holder::Collet(collet) => collet.get_type(),
                 };
                 if ui
                     .selectable_label(app.selections.selected_holder_index == i, label)

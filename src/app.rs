@@ -336,6 +336,10 @@ pub fn sort_by(app: &mut ManagingApp, ui: &mut egui::Ui) {
 pub fn settings(app: &mut ManagingApp, ctx: &egui::Context) {
     let mut is_window_open = true;
 
+    if app.gui_singletons.color_settings.index.is_none() {
+        app.gui_singletons.color_settings.index = Some(0);
+    }
+
     egui::Window::new("Settings")
         .open(&mut is_window_open)
         .show(ctx, |ui| {
@@ -374,14 +378,14 @@ pub fn settings(app: &mut ManagingApp, ctx: &egui::Context) {
                         .selected_text(
                             app.gui_singletons.rotating_tools
                                 [app.gui_singletons.color_settings.index.unwrap_or(0)]
-                            .get_name(),
+                            .get_type(),
                         )
                         .show_ui(ui, |ui| {
                             for (i, tool) in app.gui_singletons.rotating_tools.iter().enumerate() {
                                 if ui
                                     .selectable_label(
                                         app.gui_singletons.color_settings.index == Some(i),
-                                        tool.get_name(),
+                                        tool.get_type(),
                                     )
                                     .clicked()
                                 {
@@ -395,14 +399,14 @@ pub fn settings(app: &mut ManagingApp, ctx: &egui::Context) {
                         .selected_text(
                             app.gui_singletons.insert_tools
                                 [app.gui_singletons.color_settings.index.unwrap_or(0)]
-                            .get_name(),
+                            .get_type(),
                         )
                         .show_ui(ui, |ui| {
                             for (i, tool) in app.gui_singletons.insert_tools.iter().enumerate() {
                                 if ui
                                     .selectable_label(
                                         app.gui_singletons.color_settings.index == Some(i),
-                                        tool.get_name(),
+                                        tool.get_type(),
                                     )
                                     .clicked()
                                 {
@@ -416,14 +420,14 @@ pub fn settings(app: &mut ManagingApp, ctx: &egui::Context) {
                         .selected_text(
                             app.gui_singletons.holders
                                 [app.gui_singletons.color_settings.index.unwrap_or(0)]
-                            .get_name(),
+                            .get_type(),
                         )
                         .show_ui(ui, |ui| {
                             for (i, tool) in app.gui_singletons.holders.iter().enumerate() {
                                 if ui
                                     .selectable_label(
                                         app.gui_singletons.color_settings.index == Some(i),
-                                        tool.get_name(),
+                                        tool.get_type(),
                                     )
                                     .clicked()
                                 {
@@ -437,14 +441,14 @@ pub fn settings(app: &mut ManagingApp, ctx: &egui::Context) {
                         .selected_text(
                             app.gui_singletons.adapters
                                 [app.gui_singletons.color_settings.index.unwrap_or(0)]
-                            .get_name(),
+                            .get_type(),
                         )
                         .show_ui(ui, |ui| {
                             for (i, tool) in app.gui_singletons.adapters.iter().enumerate() {
                                 if ui
                                     .selectable_label(
                                         app.gui_singletons.color_settings.index == Some(i),
-                                        tool.get_name(),
+                                        tool.get_type(),
                                     )
                                     .clicked()
                                 {
@@ -502,7 +506,6 @@ pub fn settings(app: &mut ManagingApp, ctx: &egui::Context) {
                         apply_colors(app);
                     }
                 }
-                // Call functions to update all colors everywhere
             }
         });
     if !is_window_open {
