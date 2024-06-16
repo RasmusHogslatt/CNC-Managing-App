@@ -51,6 +51,7 @@ pub enum AppState {
     AddMachine,
     ShowLibrary,
     Settings,
+    Calculations,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Default)]

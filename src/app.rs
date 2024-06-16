@@ -141,6 +141,11 @@ impl eframe::App for ManagingApp {
 
                 select_machine(self, ui);
                 select_magazine(self, ui);
+
+                ui.separator();
+                if ui.button("Utility calculations").clicked() {
+                    self.app_states.app_state = AppState::Calculations;
+                }
             });
 
         egui::CentralPanel::default().show(ctx, |ui| {
@@ -162,42 +167,45 @@ impl eframe::App for ManagingApp {
                     }
                 }
                 AppState::Settings => settings(self, ctx),
-            }
-
-            match &self.app_states.move_state {
-                Some(state) => match state {
-                    MoveStates::ToolToMagazine => {
-                        self.gui_singletons.tool_filter = None;
-                        self.gui_singletons.sort_by = SortBy::Slot;
-                        select_tool_from_library(self, ctx);
-                        move_tool_to_magazine(self);
-                    }
-                    MoveStates::ToolToLibrary => {
-                        self.gui_singletons.tool_filter = None;
-                        self.gui_singletons.sort_by = SortBy::Slot;
-                        move_tool_to_library(self);
-                    }
-                    MoveStates::HolderToMagazine => {
-                        select_holder_from_library(self, ctx);
-                        move_holder_to_magazine(self);
-                    }
-                    MoveStates::HolderToLibrary => {
-                        move_holder_to_library(self);
-                    }
-                    MoveStates::AdapterToMagazine => {
-                        select_adapter_from_library(self, ctx);
-                        move_adapter_to_magazine(self);
-                    }
-                    MoveStates::AdapterToLibrary => {
-                        move_adapter_to_library(self);
-                    }
-                    MoveStates::EditComment => {
-                        edit_comment(self, ctx);
-                    }
-                },
-                None => {}
+                AppState::Calculations => {
+                    println!("Calculations not implemented yet!")
+                }
             }
         });
+
+        match &self.app_states.move_state {
+            Some(state) => match state {
+                MoveStates::ToolToMagazine => {
+                    self.gui_singletons.tool_filter = None;
+                    self.gui_singletons.sort_by = SortBy::Slot;
+                    select_tool_from_library(self, ctx);
+                    move_tool_to_magazine(self);
+                }
+                MoveStates::ToolToLibrary => {
+                    self.gui_singletons.tool_filter = None;
+                    self.gui_singletons.sort_by = SortBy::Slot;
+                    move_tool_to_library(self);
+                }
+                MoveStates::HolderToMagazine => {
+                    select_holder_from_library(self, ctx);
+                    move_holder_to_magazine(self);
+                }
+                MoveStates::HolderToLibrary => {
+                    move_holder_to_library(self);
+                }
+                MoveStates::AdapterToMagazine => {
+                    select_adapter_from_library(self, ctx);
+                    move_adapter_to_magazine(self);
+                }
+                MoveStates::AdapterToLibrary => {
+                    move_adapter_to_library(self);
+                }
+                MoveStates::EditComment => {
+                    edit_comment(self, ctx);
+                }
+            },
+            None => {}
+        }
     }
 }
 
