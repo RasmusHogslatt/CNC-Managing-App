@@ -1,4 +1,6 @@
 use crate::adapter::*;
+use crate::calculations::calculations::*;
+
 use crate::holder::*;
 use crate::library::*;
 use crate::machine::*;
@@ -84,95 +86,117 @@ impl eframe::App for ManagingApp {
     /// Called each time the UI needs repainting, which may be many times per second.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         //log_states(self);
+        self.left_panel(ctx);
+        self.central_panel(ctx);
+        self.handle_state_transitions(ctx);
+    }
+}
+
+impl ManagingApp {
+    pub fn left_panel(&mut self, ctx: &egui::Context) {
         egui::SidePanel::left("left_panel")
             .resizable(false)
             .default_width(300.0)
             .show(ctx, |ui| {
-                ui.horizontal(|ui| {
-                    egui::widgets::global_dark_light_mode_buttons(ui);
-                    if ui.button("Settings").clicked() {
-                        self.app_states.app_state = AppState::Settings;
-                    }
-                });
-                ui.separator();
-                if ui
-                    .add(egui::Button::new("Show library"))
-                    .on_hover_text("Library of tools, holders and adapters")
-                    .clicked()
-                {
-                    print!("Show library button clicked!");
-                    self.app_states.app_state = AppState::ShowLibrary;
-                }
-                ui.separator();
-                if ui
-                    .add(egui::Button::new("Add machine"))
-                    .on_hover_text("Configure a new machine")
-                    .clicked()
-                {
-                    print!("Add machine button clicked!");
-                    self.app_states.app_state = AppState::AddMachine;
-                }
-                ui.separator();
-                if ui
-                    .add(egui::Button::new("Add tool"))
-                    .on_hover_text("Configure a new tool")
-                    .clicked()
-                {
-                    print!("Add tool button clicked!");
-                    self.app_states.app_state = AppState::AddTool;
-                }
-                if ui
-                    .add(egui::Button::new("Add holder"))
-                    .on_hover_text("Configure a new holder")
-                    .clicked()
-                {
-                    print!("Add holder button clicked!");
-                    self.app_states.app_state = AppState::AddHolder;
-                }
-                if ui
-                    .add(egui::Button::new("Add adapter"))
-                    .on_hover_text("Configure a new adapter")
-                    .clicked()
-                {
-                    print!("Add adapter button clicked!");
-                    self.app_states.app_state = AppState::AddAdapter;
-                }
-                ui.separator();
-
-                select_machine(self, ui);
-                select_magazine(self, ui);
-
-                ui.separator();
-                if ui.button("Utility calculations").clicked() {
-                    self.app_states.app_state = AppState::Calculations;
-                }
+                self.handle_left_panel_buttons(ui);
             });
+    }
 
+    pub fn handle_left_panel_buttons(&mut self, ui: &mut egui::Ui) {
+        ui.horizontal(|ui| {
+            egui::widgets::global_dark_light_mode_buttons(ui);
+            if ui.button("Settings").clicked() {
+                self.app_states.app_state = AppState::Settings;
+            }
+        });
+        ui.separator();
+        if ui
+            .add(egui::Button::new("Show library"))
+            .on_hover_text("Library of tools, holders and adapters")
+            .clicked()
+        {
+            print!("Show library button clicked!");
+            self.app_states.app_state = AppState::ShowLibrary;
+        }
+        ui.separator();
+        if ui
+            .add(egui::Button::new("Add machine"))
+            .on_hover_text("Configure a new machine")
+            .clicked()
+        {
+            print!("Add machine button clicked!");
+            self.app_states.app_state = AppState::AddMachine;
+        }
+        ui.separator();
+        if ui
+            .add(egui::Button::new("Add tool"))
+            .on_hover_text("Configure a new tool")
+            .clicked()
+        {
+            print!("Add tool button clicked!");
+            self.app_states.app_state = AppState::AddTool;
+        }
+        if ui
+            .add(egui::Button::new("Add holder"))
+            .on_hover_text("Configure a new holder")
+            .clicked()
+        {
+            print!("Add holder button clicked!");
+            self.app_states.app_state = AppState::AddHolder;
+        }
+        if ui
+            .add(egui::Button::new("Add adapter"))
+            .on_hover_text("Configure a new adapter")
+            .clicked()
+        {
+            print!("Add adapter button clicked!");
+            self.app_states.app_state = AppState::AddAdapter;
+        }
+        ui.separator();
+        select_machine(self, ui);
+        select_magazine(self, ui);
+        ui.separator();
+        if ui.button("Utility calculations").clicked() {
+            self.app_states.app_state = AppState::Calculations;
+        }
+    }
+
+    pub fn central_panel(&mut self, ctx: &egui::Context) {
         egui::CentralPanel::default().show(ctx, |ui| {
             filter_by_tool_category(self, ui);
             sort_by(self, ui);
 
             display_magazine(self, ui, ctx);
-            match self.app_states.app_state {
-                AppState::ShowMagazine => {
-                    // display_magazine(self, ui, ctx);
-                }
-                AppState::AddTool => add_tool(self, ctx),
-                AppState::AddHolder => add_holder(self, ctx),
-                AppState::AddAdapter => add_adapter(self, ctx),
-                AppState::AddMachine => add_machine(self, ctx),
-                AppState::ShowLibrary => {
-                    if !self.library.display(ctx) {
-                        reset_states(self);
-                    }
-                }
-                AppState::Settings => settings(self, ctx),
-                AppState::Calculations => {
-                    println!("Calculations not implemented yet!")
+        });
+    }
+
+    pub fn handle_state_transitions(&mut self, ctx: &egui::Context) {
+        self.handle_app_state_transitions(ctx);
+        self.handle_move_state_transitions(ctx);
+    }
+
+    pub fn handle_app_state_transitions(&mut self, ctx: &egui::Context) {
+        match self.app_states.app_state {
+            AppState::ShowMagazine => {
+                // display_magazine(self, ui, ctx);
+            }
+            AppState::AddTool => add_tool(self, ctx),
+            AppState::AddHolder => add_holder(self, ctx),
+            AppState::AddAdapter => add_adapter(self, ctx),
+            AppState::AddMachine => add_machine(self, ctx),
+            AppState::ShowLibrary => {
+                if !self.library.display(ctx) {
+                    reset_states(self);
                 }
             }
-        });
+            AppState::Settings => settings(self, ctx),
+            AppState::Calculations => {
+                calculations(self, ctx);
+            }
+        }
+    }
 
+    pub fn handle_move_state_transitions(&mut self, ctx: &egui::Context) {
         match &self.app_states.move_state {
             Some(state) => match state {
                 MoveStates::ToolToMagazine => {

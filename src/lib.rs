@@ -1,17 +1,19 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
-mod adapters;
-mod app;
-mod comment;
-mod holders;
-mod library;
-mod machine;
-mod magazine;
-mod resources;
-mod tools;
+pub mod adapters;
+pub mod app;
+pub mod calculations;
+pub mod comment;
+pub mod holders;
+pub mod library;
+pub mod machine;
+pub mod magazine;
+pub mod resources;
+pub mod tools;
 
 pub use adapters::*;
 pub use app::*;
+pub use calculations::*;
 pub use comment::*;
 pub use holders::*;
 pub use library::*;

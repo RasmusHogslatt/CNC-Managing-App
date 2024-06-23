@@ -5,8 +5,8 @@ use egui::Color32;
 use strum::{Display, EnumIter, EnumString};
 
 use crate::{
-    adapter::Adapter, collet::Collet, drill::Drill, holder::Holder, hydraulic::Hydraulic,
-    mill::Mill, tool::Tool, trigoninsert::TrigonInsert, Machine,
+    adapter::Adapter, calculations::calculations::*, collet::Collet, drill::Drill, holder::Holder,
+    hydraulic::Hydraulic, mill::Mill, tool::Tool, trigoninsert::TrigonInsert, Machine,
 };
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Default)]
@@ -159,6 +159,8 @@ pub struct GuiSingletons {
 
     pub color_settings_state: ColorSettingsState,
     pub color_settings: ColorSettings,
+
+    pub universal_calculations: UniversalCalculations,
 }
 
 impl Default for GuiSingletons {
@@ -216,6 +218,7 @@ impl Default for GuiSingletons {
                 index: None,
                 color: Color32::RED,
             },
+            universal_calculations: UniversalCalculations::default(),
         }
     }
 }
