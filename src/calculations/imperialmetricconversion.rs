@@ -4,9 +4,9 @@ use strum::{Display, EnumIter, EnumString};
 
 use crate::{utility_calculations::*, ManagingApp};
 
-const MIN_COLUMN_WIDTH: f32 = 100.0;
+use super::calculations::MIN_COLUMN_WIDTH;
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Default)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct ImperialMetricConversionFields {
     // Length
     pub metric_unit_length: MetricLength,
@@ -44,6 +44,38 @@ pub struct ImperialMetricConversionFields {
     pub metric_temperature_celsius: f32,
     pub metric_temperature_kelvin: f32,
     pub imperial_temperature_fahrenheit: f32,
+}
+impl Default for ImperialMetricConversionFields {
+    fn default() -> Self {
+        Self {
+            metric_unit_length: Default::default(),
+            imperial_unit_length: Default::default(),
+            metric_length_mm: Default::default(),
+            metric_length_cm: Default::default(),
+            metric_length_m: Default::default(),
+            imperial_length_inch: Default::default(),
+            imperial_length_feet: Default::default(),
+            imperial_length_yard: Default::default(),
+            metric_unit_area: Default::default(),
+            imperial_unit_area: Default::default(),
+            metric_area_mm2: Default::default(),
+            metric_area_cm2: Default::default(),
+            metric_area_m2: Default::default(),
+            imperial_area_inch2: Default::default(),
+            imperial_area_feet2: Default::default(),
+            imperial_area_yard2: Default::default(),
+            metric_unit_weight: Default::default(),
+            imperial_unit_weight: Default::default(),
+            metric_weight_g: Default::default(),
+            metric_weight_kg: Default::default(),
+            metric_weight_tonne: Default::default(),
+            imperial_weight_ounce: Default::default(),
+            imperial_weight_pound: Default::default(),
+            metric_temperature_celsius: 0.0,
+            metric_temperature_kelvin: 273.15,
+            imperial_temperature_fahrenheit: 32.0,
+        }
+    }
 }
 
 #[derive(
