@@ -1,16 +1,19 @@
+use std::fmt::format;
+
 use crate::custom_widgets::*;
 use crate::ManagingApp;
 use egui::{Color32, Pos2};
 use egui::{Frame, Painter, Rect, Stroke, Ui, Vec2};
+use env_logger::fmt::Color;
+
+use frame_widget::DrawingFrame;
 use labeled_drag_value_widget::LabeledDragValueWidget;
-use visualization_context::calculate_bar_end_x;
-use visualization_context::VisualizationContext;
 
 pub const FRAME_COLOR: Color32 = Color32::TRANSPARENT;
 pub const CLAW_COLOR: Color32 = Color32::BROWN;
-pub const CLAW_ARROW_COLOR: Color32 = Color32::BLACK;
+pub const ARROW_COLOR: Color32 = Color32::BLACK;
 pub const BAR_COLOR: Color32 = Color32::DARK_GRAY;
-pub const FACING_STOCK_COLOR: Color32 = Color32::YELLOW;
+pub const FACING_STOCK_COLOR: Color32 = Color32::from_rgb(255, 195, 0);
 pub const WORKPIECE_COLOR: Color32 = Color32::BLUE;
 pub const SAFETY_MARGIN_COLOR: Color32 = Color32::YELLOW;
 pub const CUTTING_TOOL_COLOR: Color32 = Color32::RED;
@@ -18,7 +21,10 @@ pub const Z_ZERO_COLOR: Color32 = Color32::BLACK;
 pub const FRAME_PADDING: f32 = 10.0;
 pub const MAX_BAR_LENGTH: f32 = 1000.0;
 pub const FRAME_HEIGHT: f32 = 200.0;
-
+pub const LINE_WIDTH: f32 = 25.0;
+pub const TEXT_OFFSET: f32 = 20.0;
+pub const ARROW_WIDTH: f32 = 3.0;
+pub const ARROW_TOP_OFFSET: f32 = 40.0;
 use super::calculations::{
     CuttingToolFields, MaterialFields, WorkpieceFields, FRAME_WIDTH, MIN_COLUMN_WIDTH,
 };
@@ -27,9 +33,9 @@ use super::calculations::{
 pub struct ThreeClawPullingFields {
     pub z_zero: f32,                                        // Front face of material
     pub desired_safety_margin_past_claw_overextension: f32, // Desired safety margin past claw overextension
-    pub gripping_point: f32,      // Point where the claw grips the material
-    pub claw_overextension: f32,  // Distance the claw extends past gripping point towards chuck
-    pub total_safety_margin: f32, // Total safety margin
+    pub gripping_point: f32,     // Point where the claw grips the material
+    pub claw_overextension: f32, // Distance the claw extends past gripping point towards chuck
+    pub scaling_factor: f32,     // Visualization scaling factor
 }
 
 pub fn handle_three_claw_pulling(app: &mut ManagingApp, ui: &mut egui::Ui) {
@@ -175,17 +181,165 @@ pub fn handle_three_claw_pulling(app: &mut ManagingApp, ui: &mut egui::Ui) {
         });
 
     ui.separator();
-    ui.label(egui::RichText::new("Visualization").heading());
+    egui::Grid::new("visualization_grid")
+        .num_columns(2)
+        .min_col_width(MIN_COLUMN_WIDTH)
+        .show(ui, |ui| {
+            ui.label(egui::RichText::new("Visualization").heading());
+            ui.end_row();
+            ui.add(
+                egui::Slider::new(&mut three_claw_fields.scaling_factor, 0.5..=5.0)
+                    .text("Scale")
+                    .clamp_to_range(true),
+            );
+            ui.end_row();
+        });
 
-    // Visualize the gripping
-    visualize_gripping(
-        ui,
-        Vec2::new(FRAME_WIDTH, FRAME_HEIGHT),
-        three_claw_fields,
-        material_fields,
-        cutting_tool_fields,
-        workpiece_fields,
+    let drawing_frame = DrawingFrame::new(FRAME_WIDTH, FRAME_HEIGHT);
+    let offset_from_right: f32 = 10.0;
+    let offset_from_left: f32 = 10.0;
+    let bar_y = drawing_frame.size.y * 0.5;
+
+    // Calculate the maximum length that can be displayed
+    let max_display_length = (drawing_frame.size.x - offset_from_left - offset_from_right)
+        / three_claw_fields.scaling_factor;
+
+    // Calculate positions
+
+    let bar_start = Pos2::new(drawing_frame.size.x - offset_from_right, bar_y);
+    let bar_end = Pos2::new(
+        bar_start.x - material_fields.length * three_claw_fields.scaling_factor,
+        bar_y,
     );
+
+    // Now add all the lines to the drawing frame
+    let mut drawing_frame: DrawingFrame = drawing_frame; // Make drawing_frame mutable here
+
+    // Draw the main bar (material length)
+    drawing_frame.add_line(
+        bar_start,
+        bar_end,
+        BAR_COLOR,
+        format!("Bar Length: {:.2}", material_fields.length),
+        material_fields.diameter, // No scaling for y-axis
+        TEXT_OFFSET,
+    );
+
+    if material_fields.length > max_display_length {
+        drawing_frame.add_text(
+            "Bar extends past view".to_string(),
+            Pos2::new(offset_from_left, drawing_frame.size.y - TEXT_OFFSET),
+            Color32::YELLOW,
+        );
+    }
+
+    // Height values for reuse
+    let y_below = bar_y + (material_fields.diameter + LINE_WIDTH) * 0.5;
+    let y_above = bar_y - (material_fields.diameter + LINE_WIDTH) * 0.5;
+
+    // Right facing stock value
+    let right_facing_stock_end =
+        bar_start.x - workpiece_fields.facing_stock_right * three_claw_fields.scaling_factor;
+    drawing_frame.add_line(
+        Pos2::new(bar_start.x, y_below),
+        Pos2::new(right_facing_stock_end, y_below),
+        FACING_STOCK_COLOR,
+        "Facing stock".to_string(),
+        LINE_WIDTH,
+        TEXT_OFFSET,
+    );
+
+    // Workpiece length
+    let workpiece_end =
+        right_facing_stock_end - workpiece_fields.length * three_claw_fields.scaling_factor;
+    drawing_frame.add_line(
+        Pos2::new(right_facing_stock_end, y_below),
+        Pos2::new(workpiece_end.max(offset_from_left), y_below),
+        WORKPIECE_COLOR,
+        "Workpiece".to_string(),
+        LINE_WIDTH,
+        TEXT_OFFSET,
+    );
+
+    // Left facing stock value
+    let left_facing_stock_end =
+        workpiece_end - workpiece_fields.facing_stock_left * three_claw_fields.scaling_factor;
+    drawing_frame.add_line(
+        Pos2::new(workpiece_end, y_below),
+        Pos2::new(left_facing_stock_end, y_below),
+        FACING_STOCK_COLOR,
+        "Facing stock".to_string(),
+        LINE_WIDTH,
+        TEXT_OFFSET,
+    );
+
+    let cutting_tool_end =
+        left_facing_stock_end - cutting_tool_fields.width * three_claw_fields.scaling_factor;
+    drawing_frame.add_line(
+        Pos2::new(left_facing_stock_end, y_below),
+        Pos2::new(cutting_tool_end, y_below),
+        CUTTING_TOOL_COLOR,
+        "Cutting tool".to_string(),
+        LINE_WIDTH,
+        TEXT_OFFSET,
+    );
+
+    let claw_gripping_point_start =
+        bar_start.x - (three_claw_fields.gripping_point * three_claw_fields.scaling_factor);
+    let claw_overextension_end = claw_gripping_point_start
+        - (three_claw_fields.claw_overextension) * three_claw_fields.scaling_factor;
+
+    drawing_frame.add_line(
+        Pos2::new(claw_gripping_point_start, y_above),
+        Pos2::new(claw_overextension_end, y_above),
+        CLAW_COLOR,
+        "Claw".to_string(),
+        LINE_WIDTH,
+        TEXT_OFFSET,
+    );
+
+    let desired_safe_margin_end = claw_overextension_end
+        - (three_claw_fields.desired_safety_margin_past_claw_overextension
+            * three_claw_fields.scaling_factor);
+    drawing_frame.add_line(
+        Pos2::new(claw_overextension_end, y_above),
+        Pos2::new(desired_safe_margin_end, y_above),
+        SAFETY_MARGIN_COLOR,
+        "Safety margin".to_string(),
+        LINE_WIDTH,
+        TEXT_OFFSET,
+    );
+
+    drawing_frame.add_arrow(
+        Pos2::new(claw_gripping_point_start, ARROW_TOP_OFFSET),
+        Pos2::new(claw_gripping_point_start, bar_y),
+        ARROW_COLOR,
+        "Gripping point".to_string(),
+        ARROW_WIDTH,
+        TEXT_OFFSET,
+    );
+    drawing_frame.add_text(
+        format!("Gripping: {:.2}", three_claw_fields.gripping_point),
+        Pos2::new(claw_gripping_point_start, TEXT_OFFSET),
+        ARROW_COLOR,
+    );
+
+    let zero_point = bar_start.x - (three_claw_fields.z_zero * three_claw_fields.scaling_factor);
+    drawing_frame.add_arrow(
+        Pos2::new(zero_point, ARROW_TOP_OFFSET),
+        Pos2::new(zero_point, bar_y),
+        Z_ZERO_COLOR,
+        "Z-Zero".to_string(),
+        ARROW_WIDTH,
+        TEXT_OFFSET,
+    );
+    drawing_frame.add_text(
+        format!("Z-Zero: {:.2}", three_claw_fields.z_zero),
+        Pos2::new(zero_point, TEXT_OFFSET),
+        Z_ZERO_COLOR,
+    );
+
+    ui.add(drawing_frame);
 }
 
 pub fn calculate_three_claw_pulling(
@@ -194,298 +348,4 @@ pub fn calculate_three_claw_pulling(
     cutting_tool_fields: &mut CuttingToolFields,
     workpiece_fields: &mut WorkpieceFields,
 ) {
-}
-
-pub fn visualize_gripping(
-    ui: &mut egui::Ui,
-    size: Vec2,
-    three_claw_fields: &mut ThreeClawPullingFields,
-    material_fields: &mut MaterialFields,
-    cutting_tool_fields: &mut CuttingToolFields,
-    workpiece_fields: &mut WorkpieceFields,
-) {
-    let frame = Frame::none()
-        .fill(FRAME_COLOR)
-        .stroke(Stroke::new(1.0, FRAME_COLOR))
-        .inner_margin(10.0)
-        .outer_margin(5.0)
-        .rounding(1.0);
-
-    frame.show(ui, |ui| {
-        let (response, painter) = ui.allocate_painter(size, egui::Sense::hover());
-        let frame_rect = response.rect;
-
-        let width_scale = (frame_rect.width() - 2.0 * FRAME_PADDING) / MAX_BAR_LENGTH;
-        let height_scale = material_fields.diameter / frame_rect.height() * 10.0;
-
-        let mut context =
-            VisualizationContext::new(ui, frame_rect, FRAME_PADDING, width_scale, height_scale);
-
-        draw_z_zero_arrow(&mut context, material_fields, three_claw_fields);
-        draw_facing_stock_right(&mut context, material_fields, workpiece_fields);
-        draw_workpiece_length(&mut context, material_fields, workpiece_fields);
-        draw_facing_stock_left(&mut context, material_fields, workpiece_fields);
-        draw_bar_length(&mut context, material_fields);
-        draw_cutting_tools(
-            &mut context,
-            material_fields,
-            workpiece_fields,
-            cutting_tool_fields,
-        );
-        let claw_end_x = draw_claw_overextension(
-            &mut context,
-            material_fields,
-            workpiece_fields,
-            three_claw_fields,
-        );
-        draw_safety_margin(&mut context, three_claw_fields, claw_end_x);
-    });
-}
-
-pub fn draw_bar_length(context: &mut VisualizationContext, material_fields: &MaterialFields) {
-    context.draw_horizontal_line(
-        0.0,
-        material_fields.length,
-        context.frame_rect.center().y,
-        BAR_COLOR,
-        material_fields.diameter * context.height_scale,
-        format!("Bar length: {} mm", material_fields.length),
-    );
-}
-
-pub fn draw_facing_stock_right(
-    context: &mut VisualizationContext,
-    material_fields: &MaterialFields,
-    workpiece_fields: &WorkpieceFields,
-) {
-    let facing_stock_height = 20.0;
-    let bar_end_x = calculate_bar_end_x(context, material_fields.length);
-
-    context.draw_horizontal_line(
-        material_fields.length - workpiece_fields.facing_stock_right,
-        material_fields.length,
-        context.frame_rect.center().y - facing_stock_height,
-        FACING_STOCK_COLOR,
-        facing_stock_height,
-        format!(
-            "Right facing stock: {} mm",
-            workpiece_fields.facing_stock_right
-        ),
-    );
-}
-
-pub fn draw_workpiece_length(
-    context: &mut VisualizationContext,
-    material_fields: &MaterialFields,
-    workpiece_fields: &WorkpieceFields,
-) {
-    let workpiece_height = 20.0;
-    let bar_end_x = calculate_bar_end_x(context, material_fields.length);
-    let workpiece_start_x = bar_end_x - workpiece_fields.facing_stock_right * context.width_scale;
-
-    context.draw_horizontal_line(
-        material_fields.length - workpiece_fields.facing_stock_right - workpiece_fields.length,
-        material_fields.length - workpiece_fields.facing_stock_right,
-        context.frame_rect.center().y + workpiece_height,
-        WORKPIECE_COLOR,
-        workpiece_height,
-        format!("Workpiece length: {} mm", workpiece_fields.length),
-    );
-
-    // Draw vertical lines connecting workpiece to the bar
-    context.draw_vertical_line(
-        material_fields.length - workpiece_fields.facing_stock_right,
-        context.frame_rect.center().y,
-        context.frame_rect.center().y + workpiece_height,
-        WORKPIECE_COLOR,
-        1.0,
-        "Workpiece start",
-    );
-    context.draw_vertical_line(
-        material_fields.length - workpiece_fields.facing_stock_right - workpiece_fields.length,
-        context.frame_rect.center().y,
-        context.frame_rect.center().y + workpiece_height,
-        WORKPIECE_COLOR,
-        1.0,
-        "Workpiece end",
-    );
-}
-
-pub fn draw_facing_stock_left(
-    context: &mut VisualizationContext,
-    material_fields: &MaterialFields,
-    workpiece_fields: &WorkpieceFields,
-) {
-    let facing_stock_height = 20.0;
-    let workpiece_end_x =
-        material_fields.length - workpiece_fields.facing_stock_right - workpiece_fields.length;
-
-    context.draw_horizontal_line(
-        workpiece_end_x - workpiece_fields.facing_stock_left,
-        workpiece_end_x,
-        context.frame_rect.center().y - facing_stock_height,
-        FACING_STOCK_COLOR,
-        facing_stock_height,
-        format!(
-            "Left facing stock: {} mm",
-            workpiece_fields.facing_stock_left
-        ),
-    );
-
-    // Draw a line connecting left facing stock to the bar
-    context.draw_vertical_line(
-        workpiece_end_x - workpiece_fields.facing_stock_left,
-        context.frame_rect.center().y - facing_stock_height,
-        context.frame_rect.center().y,
-        FACING_STOCK_COLOR,
-        1.0,
-        "Left facing stock end",
-    );
-}
-
-pub fn draw_safety_margin(
-    context: &mut VisualizationContext,
-    three_claw_fields: &ThreeClawPullingFields,
-    claw_end_x: f32,
-) {
-    let margin_height = 10.0;
-    let margin_end_x = claw_end_x
-        - three_claw_fields.desired_safety_margin_past_claw_overextension * context.width_scale;
-
-    context.draw_horizontal_line(
-        (margin_end_x - context.frame_rect.min.x - context.frame_padding) / context.width_scale,
-        (claw_end_x - context.frame_rect.min.x - context.frame_padding) / context.width_scale,
-        context.frame_rect.center().y - margin_height / 2.0,
-        SAFETY_MARGIN_COLOR,
-        margin_height,
-        format!(
-            "Safety margin: {} mm",
-            three_claw_fields.desired_safety_margin_past_claw_overextension
-        ),
-    );
-
-    // Draw a line connecting margin end to the bar
-    context.draw_vertical_line(
-        (margin_end_x - context.frame_rect.min.x - context.frame_padding) / context.width_scale,
-        context.frame_rect.center().y - margin_height / 2.0,
-        context.frame_rect.center().y,
-        SAFETY_MARGIN_COLOR,
-        1.0,
-        "Safety margin end",
-    );
-}
-
-pub fn draw_claw_overextension(
-    context: &mut VisualizationContext,
-    material_fields: &MaterialFields,
-    workpiece_fields: &WorkpieceFields,
-    three_claw_fields: &ThreeClawPullingFields,
-) -> f32 {
-    let claw_height = 15.0;
-    let bar_end_x = calculate_bar_end_x(context, material_fields.length);
-    let gripping_point_x = bar_end_x - three_claw_fields.gripping_point * context.width_scale;
-    let claw_end_x = gripping_point_x - three_claw_fields.claw_overextension * context.width_scale;
-
-    context.draw_horizontal_line(
-        material_fields.length
-            - three_claw_fields.gripping_point
-            - three_claw_fields.claw_overextension,
-        material_fields.length - three_claw_fields.gripping_point,
-        context.frame_rect.center().y - claw_height / 2.0,
-        CLAW_COLOR,
-        claw_height,
-        format!(
-            "Claw overextension: {} mm",
-            three_claw_fields.claw_overextension
-        ),
-    );
-
-    // Draw vertical arrow at the gripping point
-    context.draw_vertical_arrow(
-        material_fields.length - three_claw_fields.gripping_point,
-        context.frame_padding,
-        context.frame_rect.center().y - claw_height / 2.0,
-        CLAW_ARROW_COLOR,
-        2.0,
-        format!(
-            "Gripping point: {} mm from end",
-            three_claw_fields.gripping_point
-        ),
-    );
-
-    // Add a label for gripping point
-    let text_pos = Pos2::new(
-        gripping_point_x,
-        context.frame_rect.min.y + context.frame_padding,
-    );
-    context.ui.painter().text(
-        text_pos,
-        egui::Align2::CENTER_BOTTOM,
-        "Gripping point",
-        egui::FontId::proportional(14.0),
-        CLAW_ARROW_COLOR,
-    );
-
-    claw_end_x
-}
-
-pub fn draw_cutting_tools(
-    context: &mut VisualizationContext,
-    material_fields: &MaterialFields,
-    workpiece_fields: &WorkpieceFields,
-    cutting_tool_fields: &CuttingToolFields,
-) {
-    let cutting_tool_height = 25.0;
-    let workpiece_end_x =
-        material_fields.length - workpiece_fields.facing_stock_right - workpiece_fields.length;
-    let cutting_tool_start_x = workpiece_end_x - workpiece_fields.facing_stock_left;
-
-    context.draw_horizontal_line(
-        cutting_tool_start_x - cutting_tool_fields.width,
-        cutting_tool_start_x,
-        context.frame_rect.center().y,
-        CUTTING_TOOL_COLOR,
-        cutting_tool_height,
-        format!("Cutting tool width: {} mm", cutting_tool_fields.width),
-    );
-}
-
-pub fn calculate_claw_end_x(
-    frame_rect: Rect,
-    material_fields: &MaterialFields,
-    three_claw_fields: &ThreeClawPullingFields,
-    frame_padding: f32,
-    width_scale: f32,
-) -> f32 {
-    let bar_end_x = frame_rect.min.x + frame_padding + material_fields.length * width_scale;
-    let gripping_point_x = bar_end_x - three_claw_fields.gripping_point * width_scale;
-    gripping_point_x - three_claw_fields.claw_overextension * width_scale
-}
-
-pub fn draw_z_zero_arrow(
-    context: &mut VisualizationContext,
-    material_fields: &MaterialFields,
-    three_claw_fields: &ThreeClawPullingFields,
-) {
-    let arrow_height = 30.0;
-    let bar_end_x = calculate_bar_end_x(context, material_fields.length);
-    let z_zero_x = bar_end_x - three_claw_fields.z_zero * context.width_scale;
-
-    context.draw_vertical_arrow(
-        three_claw_fields.z_zero,
-        context.frame_padding,
-        context.frame_rect.center().y - arrow_height / 2.0,
-        Z_ZERO_COLOR,
-        2.0,
-        format!("Z-zero: {} mm", three_claw_fields.z_zero),
-    );
-
-    // Add the label separately
-    context.ui.painter().text(
-        Pos2::new(z_zero_x, context.frame_rect.min.y + context.frame_padding),
-        egui::Align2::CENTER_BOTTOM,
-        "Z-zero",
-        egui::FontId::proportional(14.0),
-        Z_ZERO_COLOR,
-    );
 }
