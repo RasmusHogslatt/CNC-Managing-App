@@ -1,4 +1,4 @@
-use egui::{Color32, Pos2, Rect, Response, Sense, Stroke, Ui, Vec2};
+use egui::{Color32, Pos2, Response, Sense, Stroke, Ui, Vec2};
 
 pub struct LineSegmentWidget {
     start: Pos2,

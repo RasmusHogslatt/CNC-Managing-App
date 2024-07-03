@@ -1,10 +1,10 @@
-use std::fmt::format;
+
 
 use crate::custom_widgets::*;
 use crate::ManagingApp;
 use egui::{Color32, Pos2};
-use egui::{Frame, Painter, Rect, Stroke, Ui, Vec2};
-use env_logger::fmt::Color;
+
+
 
 use frame_widget::DrawingFrame;
 use labeled_drag_value_widget::LabeledDragValueWidget;
@@ -52,13 +52,13 @@ pub fn handle_three_claw_pulling(app: &mut ManagingApp, ui: &mut egui::Ui) {
         .show(ui, |ui| {
             ui.label(egui::RichText::new("Three Claw Pulling").heading());
             ui.end_row();
-            let (response, _) =
+            let (_response, _) =
                 LabeledDragValueWidget::new("Z Zero: ", &mut three_claw_fields.z_zero)
                     .color(Z_ZERO_COLOR)
                     .hover_text("Front face of material")
                     .show(ui);
             ui.end_row();
-            let (response, _) = LabeledDragValueWidget::new(
+            let (_response, _) = LabeledDragValueWidget::new(
                 "Claw overextension: ",
                 &mut three_claw_fields.claw_overextension,
             )
@@ -66,7 +66,7 @@ pub fn handle_three_claw_pulling(app: &mut ManagingApp, ui: &mut egui::Ui) {
             .hover_text("Distance the claw extends past gripping point towards chuck")
             .show(ui);
             ui.end_row();
-            let (response, _) = LabeledDragValueWidget::new(
+            let (_response, _) = LabeledDragValueWidget::new(
                 "Desired safety margin past claw overextension: ",
                 &mut three_claw_fields.desired_safety_margin_past_claw_overextension,
             )
@@ -98,7 +98,7 @@ pub fn handle_three_claw_pulling(app: &mut ManagingApp, ui: &mut egui::Ui) {
         .show(ui, |ui| {
             ui.label(egui::RichText::new("Material").heading());
             ui.end_row();
-            let (response, _) =
+            let (_response, _) =
                 LabeledDragValueWidget::new("Diameter: ", &mut material_fields.diameter)
                     .color(BAR_COLOR)
                     .hover_text("Diameter of the material")
@@ -126,13 +126,13 @@ pub fn handle_three_claw_pulling(app: &mut ManagingApp, ui: &mut egui::Ui) {
         .show(ui, |ui| {
             ui.label(egui::RichText::new("Workpiece").heading());
             ui.end_row();
-            let (response, _) =
+            let (_response, _) =
                 LabeledDragValueWidget::new("Length: ", &mut workpiece_fields.length)
                     .color(WORKPIECE_COLOR)
                     .hover_text("Length of the workpiece")
                     .show(ui);
             ui.end_row();
-            let (response, _) = LabeledDragValueWidget::new(
+            let (_response, _) = LabeledDragValueWidget::new(
                 "Facing stock right: ",
                 &mut workpiece_fields.facing_stock_right,
             )
@@ -343,9 +343,9 @@ pub fn handle_three_claw_pulling(app: &mut ManagingApp, ui: &mut egui::Ui) {
 }
 
 pub fn calculate_three_claw_pulling(
-    three_claw_fields: &mut ThreeClawPullingFields,
-    material_fields: &mut MaterialFields,
-    cutting_tool_fields: &mut CuttingToolFields,
-    workpiece_fields: &mut WorkpieceFields,
+    _three_claw_fields: &mut ThreeClawPullingFields,
+    _material_fields: &mut MaterialFields,
+    _cutting_tool_fields: &mut CuttingToolFields,
+    _workpiece_fields: &mut WorkpieceFields,
 ) {
 }

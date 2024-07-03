@@ -1,6 +1,6 @@
-use eframe::egui_glow::painter;
+
 use egui::{Color32, FontId, Pos2, Rect, Sense, Stroke, Vec2};
-use env_logger::fmt::Color;
+
 
 pub struct Line {
     start: Pos2,
