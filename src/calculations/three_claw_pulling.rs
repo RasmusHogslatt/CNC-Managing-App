@@ -1,10 +1,6 @@
-
-
 use crate::custom_widgets::*;
 use crate::ManagingApp;
 use egui::{Color32, Pos2};
-
-
 
 use frame_widget::DrawingFrame;
 use labeled_drag_value_widget::LabeledDragValueWidget;

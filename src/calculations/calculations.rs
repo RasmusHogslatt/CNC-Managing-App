@@ -1,3 +1,5 @@
+use std::default;
+
 use crate::calculations::imperialmetricconversion::*;
 use crate::calculations::radiandegreeconversion::*;
 use crate::three_claw_pulling::*;
@@ -45,7 +47,10 @@ impl Default for UniversalCalculations {
             calculation_type: CalculationType::ImperialMetricConversion,
             imperial_metric_conversion: ImperialMetricConversionFields::default(),
             radian_degree_conversion: RadianDegreeConversionFields::default(),
-            three_claw_pulling: ThreeClawPullingFields::default(),
+            three_claw_pulling: ThreeClawPullingFields {
+                scaling_factor: 1.0,
+                ..Default::default()
+            },
             material_fields: MaterialFields::default(),
             cutting_tool_fields: CuttingToolFields::default(),
             workpiece_fields: WorkpieceFields::default(),
